@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SparkRouteImport } from './routes/spark'
+import { Route as RawiRouteImport } from './routes/rawi'
 import { Route as IndexRouteImport } from './routes/index'
 
 const SparkRoute = SparkRouteImport.update({
   id: '/spark',
   path: '/spark',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RawiRoute = RawiRouteImport.update({
+  id: '/rawi',
+  path: '/rawi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/rawi': typeof RawiRoute
   '/spark': typeof SparkRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/rawi': typeof RawiRoute
   '/spark': typeof SparkRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/rawi': typeof RawiRoute
   '/spark': typeof SparkRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/spark'
+  fullPaths: '/' | '/rawi' | '/spark'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/spark'
-  id: '__root__' | '/' | '/spark'
+  to: '/' | '/rawi' | '/spark'
+  id: '__root__' | '/' | '/rawi' | '/spark'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  RawiRoute: typeof RawiRoute
   SparkRoute: typeof SparkRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/spark'
       fullPath: '/spark'
       preLoaderRoute: typeof SparkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rawi': {
+      id: '/rawi'
+      path: '/rawi'
+      fullPath: '/rawi'
+      preLoaderRoute: typeof RawiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,8 +87,19 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RawiRoute: RawiRoute,
   SparkRoute: SparkRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
