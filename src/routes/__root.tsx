@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { SiteNav, SiteFooter } from "@/components/site-chrome";
 
 function NotFoundComponent() {
   return (
@@ -72,21 +73,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-    ],
-    links: [
+      { title: "EDUCIS — Education in your world, your language" },
       {
-        rel: "stylesheet",
-        href: appCss,
+        name: "description",
+        content:
+          "EDUCIS combines SPARK (point at anything, learn everything) and RAWI (your world, your lesson) — AI-powered education in 6 languages across 50 countries.",
       },
+      { name: "author", content: "EDUCIS" },
+      { property: "og:title", content: "EDUCIS — Education in your world, your language" },
+      {
+        property: "og:description",
+        content: "AI-powered learning in your culture and your language. Free forever.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "stylesheet", href: appCss }],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -113,7 +115,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <div className="flex min-h-screen flex-col">
+        <SiteNav />
+        <main className="flex-1">
+          <Outlet />
+        </main>
+        <SiteFooter />
+      </div>
     </QueryClientProvider>
   );
 }
