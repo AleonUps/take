@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { SiteNav, SiteFooter } from "@/components/site-chrome";
 
 function NotFoundComponent() {
   return (
