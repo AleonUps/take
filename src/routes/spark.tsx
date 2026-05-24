@@ -12,6 +12,8 @@ import {
   RefreshCw,
   ArrowRight,
   ChevronDown,
+  Bookmark,
+  Lightbulb,
 } from "lucide-react";
 import { sparkAnalyze, type SparkResult } from "@/lib/spark.functions";
 import { LANGUAGES, GRADES, SUBJECTS, subjectColor } from "@/lib/educis";
@@ -81,6 +83,27 @@ function SparkPage() {
     setImageBase64(null);
     setPreviewUrl(null);
     mutation.reset();
+  };
+
+  const saveToLibrary = () => {
+    if (!mutation.data) return;
+    const saved = JSON.parse(localStorage.getItem("educis_library") || "{}");
+    const sparkSaves = saved.spark || [];
+    sparkSaves.unshift({
+      id: Date.now(),
+      objectName: mutation.data.objectName,
+      objectDescription: mutation.data.objectDescription,
+      subjectCount: mutation.data.subjects.length,
+      thumbnail: previewUrl,
+      result: mutation.data,
+      grade,
+      language: lang,
+      savedAt: new Date().toISOString(),
+    });
+    saved.spark = sparkSaves;
+    localStorage.setItem("educis_library", JSON.stringify(saved));
+    window.dispatchEvent(new Event("library-updated"));
+    alert("Saved to Library!");
   };
 
   return (
@@ -320,7 +343,10 @@ function SparkPage() {
               data={mutation.data}
               previewUrl={previewUrl}
               rtl={langInfo.rtl}
+              grade={grade}
+              lang={lang}
               onReset={reset}
+              onSave={saveToLibrary}
             />
           )}
         </section>
@@ -360,16 +386,49 @@ function LoadingState({ previewUrl }: { previewUrl: string | null }) {
   );
 }
 
+function highlightKeyTerms(text: string, color: string) {
+  const paragraphs = text.split(/\n\n+/);
+  return paragraphs.map((p, i) => {
+    const words = p.split(/(\s+)/);
+    const seenTerms = new Set<string>();
+    
+    return (
+      <p key={i} className="mt-3 leading-relaxed">
+        {words.map((word, j) => {
+          const cleanWord = word.replace(/[,.:;!?]$/, "");
+          const isKeyTerm = /^[A-Z][a-z]{2,}/.test(cleanWord) && j > 0 && !seenTerms.has(cleanWord.toLowerCase());
+          
+          if (isKeyTerm) {
+            seenTerms.add(cleanWord.toLowerCase());
+            return (
+              <span key={j} className="key-term" style={{ background: `${color}15` }}>
+                {word}
+              </span>
+            );
+          }
+          return word;
+        })}
+      </p>
+    );
+  });
+}
+
 function ResultsView({
   data,
   previewUrl,
   rtl,
+  grade,
+  lang,
   onReset,
+  onSave,
 }: {
   data: SparkResult;
   previewUrl: string | null;
   rtl: boolean;
+  grade: string;
+  lang: string;
   onReset: () => void;
+  onSave: () => void;
 }) {
   return (
     <div dir={rtl ? "rtl" : "ltr"} className="space-y-5">
@@ -391,6 +450,14 @@ function ResultsView({
               ))}
             </div>
           </div>
+        </div>
+        <div className="mt-4 pt-4 border-t border-border">
+          <button
+            onClick={onSave}
+            className="inline-flex items-center gap-1.5 rounded-md border border-spark/40 bg-spark/10 px-3 py-1.5 text-xs text-spark hover:bg-spark/20"
+          >
+            <Bookmark className="h-3 w-3" /> Save to Library
+          </button>
         </div>
       </div>
 
@@ -414,25 +481,29 @@ function ResultsView({
               </div>
               <h3 className="mt-3 text-xl font-semibold leading-snug">{s.lessonTitle}</h3>
               <div className="prose prose-invert prose-sm mt-3 max-w-none text-foreground/85">
-                {s.lesson.split(/\n\n+/).map((p, j) => (
-                  <p key={j} className="mt-2 leading-relaxed">{p}</p>
-                ))}
+                {highlightKeyTerms(s.lesson, color)}
               </div>
               {s.highlight && (
                 <div
-                  className="mt-4 rounded-lg border-l-2 p-3 text-sm"
+                  className="spark-highlight-box mt-4"
                   style={{ borderColor: color, background: `${color}10` }}
                 >
                   <span className="text-xs uppercase tracking-wider opacity-70">Key</span>
-                  <p className="mt-1 font-mono">{s.highlight}</p>
+                  <p className="mt-1 font-mono text-sm">{s.highlight}</p>
                 </div>
               )}
               {s.didYouKnow && (
-                <div className="mt-3 rounded-lg bg-surface-2/60 p-3 text-sm">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Did you know?
-                  </span>
-                  <p className="mt-1">{s.didYouKnow}</p>
+                <div
+                  className="spark-did-you-know mt-4"
+                  style={{ borderTopColor: color }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Lightbulb className="h-4 w-4" style={{ color }} />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Did you know?
+                    </span>
+                  </div>
+                  <p className="text-sm">{s.didYouKnow}</p>
                 </div>
               )}
               <div className="mt-4 space-y-2">
@@ -445,13 +516,25 @@ function ResultsView({
                   </details>
                 ))}
               </div>
-              <Link
-                to="/rawi"
-                search={{ concept: s.lessonTitle } as never}
-                className="mt-4 inline-flex items-center gap-1 text-xs text-rawi hover:underline"
-              >
-                Take this to RAWI <ArrowRight className="h-3 w-3" />
-              </Link>
+              
+              {/* SPARK to RAWI Pipeline Button */}
+              <div className="mt-5 pt-4 border-t border-border/50">
+                <Link
+                  to="/rawi"
+                  search={{
+                    concept: s.lessonTitle,
+                    grade: grade,
+                    language: lang,
+                    fromSpark: data.objectName,
+                    subject: s.subject,
+                  }}
+                  className="flex items-center justify-center gap-2 w-full rounded-lg border border-rawi/40 bg-rawi/10 px-4 py-2.5 text-sm font-medium text-rawi transition-all hover:bg-rawi/20 hover:border-rawi/60"
+                >
+                  <span>✦</span>
+                  Learn this through my world
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </article>
           );
         })}

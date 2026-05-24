@@ -1,7 +1,27 @@
 import { Link } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { Sparkles, BookOpen } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function SiteNav() {
+  const [libraryCount, setLibraryCount] = useState(0);
+
+  useEffect(() => {
+    const updateCount = () => {
+      const saved = JSON.parse(localStorage.getItem("educis_library") || "{}");
+      const sparkCount = (saved.spark || []).length;
+      const rawiCount = (saved.rawi || []).length;
+      setLibraryCount(sparkCount + rawiCount);
+    };
+    
+    updateCount();
+    window.addEventListener("library-updated", updateCount);
+    window.addEventListener("storage", updateCount);
+    return () => {
+      window.removeEventListener("library-updated", updateCount);
+      window.removeEventListener("storage", updateCount);
+    };
+  }, []);
+
   return (
     <header className="no-print sticky top-0 z-50 w-full">
       <div className="glass border-b border-border">
@@ -21,6 +41,15 @@ export function SiteNav() {
             </Link>
             <Link to="/rawi" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
               RAWI
+            </Link>
+            <Link to="/library" className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
+              <BookOpen className="h-3.5 w-3.5" />
+              Library
+              {libraryCount > 0 && (
+                <span className="rounded-full bg-spark/20 px-1.5 py-0.5 text-[10px] font-medium text-spark">
+                  {libraryCount}
+                </span>
+              )}
             </Link>
             <Link to="/explore" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
               Explore
@@ -60,6 +89,7 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
               <li><Link to="/spark" className="hover:text-foreground">SPARK</Link></li>
               <li><Link to="/rawi" className="hover:text-foreground">RAWI</Link></li>
+              <li><Link to="/library" className="hover:text-foreground">Library</Link></li>
               <li><Link to="/explore" className="hover:text-foreground">Explore</Link></li>
             </ul>
           </div>
