@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Upload,
   Camera,
@@ -339,10 +339,10 @@ function LoadingState({ previewUrl }: { previewUrl: string | null }) {
     "Listening to the story…",
   ];
   const [idx, setIdx] = useState(0);
-  useState(() => {
+  useEffect(() => {
     const t = setInterval(() => setIdx((i) => (i + 1) % messages.length), 1400);
     return () => clearInterval(t);
-  });
+  }, [messages.length]);
   return (
     <div className="glass relative overflow-hidden rounded-2xl p-10 text-center min-h-[60vh] grid place-items-center">
       <div>
