@@ -43,6 +43,12 @@ export const rawiGenerate = createServerFn({ method: "POST" })
     const culture = data.includeCulturalHistory
       ? " Include a cultural-history connection (a real local tradition, story, place, or historical detail)."
       : "";
+    const adjust =
+      data.difficultyAdjust === "simpler"
+        ? " Rewrite at one grade level lower. Shorter sentences, simpler vocabulary, more relatable analogies."
+        : data.difficultyAdjust === "harder"
+          ? " Rewrite at one grade level higher. Add more technical depth, academic vocabulary, and complex analytical connections."
+          : "";
 
     const user = `Concept to teach: "${data.concept}".
 Country / cultural world: ${data.countryName} (${data.countryCode}).
