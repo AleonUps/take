@@ -299,16 +299,14 @@ function RawiPage() {
             </div>
           )}
           {result && !isInitialPending && (
-            <RawiResultViewWrapper
+            <RawiResultView
               data={result}
               country={countryInfo}
               rtl={langInfo.rtl}
-              grade={grade}
-              language={lang}
-              languageName={langInfo.name}
-              onAdjust={(dir) => mutation.mutate({ adjust: dir })}
+              onAdjustDifficulty={(dir) => mutation.mutate({ adjust: dir })}
               adjusting={isAdjusting}
               adjustedDirection={adjustedDirection}
+              saveMeta={{ grade, language: lang, languageName: langInfo.name }}
             />
           )}
         </div>
@@ -317,46 +315,29 @@ function RawiPage() {
   );
 }
 
-// Lightweight wrapper to pass through saveable metadata via the underlying view
-function RawiResultViewWrapper({
-  data,
-  country,
-  rtl,
-  grade,
-  language,
-  languageName,
-  onAdjust,
-  adjusting,
-  adjustedDirection,
-}: {
-  data: RawiResult;
-  country: { code: string; name: string; flag: string; region: string };
-  rtl: boolean;
-  grade: "elementary" | "middle" | "high";
-  language: string;
-  languageName: string;
-  onAdjust: (dir: "simpler" | "harder") => void;
-  adjusting: boolean;
-  adjustedDirection: "simpler" | "harder" | null;
-}) {
-  // Inject grade/language into the view's save action via a hidden form key
-  // by passing them on the data object as a side channel.
-  return (
-    <RawiResultView
-      data={data}
-      country={country}
-      rtl={rtl}
-      onAdjustDifficulty={onAdjust}
-      adjusting={adjusting}
-      adjustedDirection={adjustedDirection}
-      // The shared view computes grade/language at save; override via global registry
-      // by tagging window with the latest meta.
-      key={`${country.code}-${grade}-${language}`}
-      // we forward via a context object on the data
-      // (kept simple: the shared view stores using "middle"/"en" defaults so we
-      // override below via a tiny effect)
-    />
+function RawiLoading({ country }: { country: string }) {
+  const msgs = useMemo(
+    () => [
+      `Walking through the markets of ${country}…`,
+      `Listening to elders in ${country}…`,
+      `Weaving the lesson into ${country}'s world…`,
+      `Choosing the right local names…`,
+      `Rewriting in your voice…`,
+    ],
+    [country],
   );
-  // NOTE: see SaveMetaSync below
-  void languageName;
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setI((x) => (x + 1) % msgs.length), 1500);
+    return () => clearInterval(t);
+  }, [msgs.length]);
+  return (
+    <div className="glass rounded-2xl p-10 text-center">
+      <div className="mx-auto h-16 w-16 animate-pulse-glow rounded-full bg-gradient-to-br from-rawi to-rawi/40" />
+      <p className="mt-6 font-serif text-xl text-rawi italic">{msgs[i]}</p>
+      <div className="mx-auto mt-6 h-1 w-64 overflow-hidden rounded-full bg-surface-2">
+        <div className="h-full w-1/2 animate-pulse-glow bg-gradient-to-r from-rawi to-rawi/30" />
+      </div>
+    </div>
+  );
 }
