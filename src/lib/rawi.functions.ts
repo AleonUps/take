@@ -53,7 +53,7 @@ export const rawiGenerate = createServerFn({ method: "POST" })
     const user = `Concept to teach: "${data.concept}".
 Country / cultural world: ${data.countryName} (${data.countryCode}).
 Grade level: ${gradeText(data.grade)}.
-Output language: ${data.languageName} (ISO: ${data.language}). Every string must be written in ${data.languageName}.${audio}${culture}
+Output language: ${data.languageName} (ISO: ${data.language}). Every string must be written in ${data.languageName}.${audio}${culture}${adjust}
 
 Return EXACTLY this JSON:
 {
