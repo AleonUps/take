@@ -53,7 +53,11 @@ function write(items: LibraryEntry[]) {
   }
 }
 
-export function saveToLibrary(entry: Omit<LibraryEntry, "id" | "savedAt">): string {
+export function saveToLibrary(
+  entry:
+    | Omit<SparkEntry, "id" | "savedAt">
+    | Omit<RawiEntry, "id" | "savedAt">,
+): string {
   const id = `${entry.kind}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const full = { ...entry, id, savedAt: Date.now() } as LibraryEntry;
   const existing = read();
