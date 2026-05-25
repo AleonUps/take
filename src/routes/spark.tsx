@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -7,14 +7,12 @@ import {
   Camera,
   X,
   Sparkles,
-  Printer,
-  Share2,
   RefreshCw,
-  ArrowRight,
   ChevronDown,
 } from "lucide-react";
 import { sparkAnalyze, type SparkResult } from "@/lib/spark.functions";
-import { LANGUAGES, GRADES, SUBJECTS, subjectColor } from "@/lib/educis";
+import { LANGUAGES, GRADES, SUBJECTS } from "@/lib/educis";
+import { SparkResultView } from "@/components/spark-result-view";
 
 export const Route = createFileRoute("/spark")({
   head: () => ({
@@ -37,6 +35,7 @@ function SparkPage() {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>("image/jpeg");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [thumbnailDataUrl, setThumbnailDataUrl] = useState<string | null>(null);
   const [grade, setGrade] = useState<"elementary" | "middle" | "high">("middle");
   const [lang, setLang] = useState<string>("en");
   const [depth, setDepth] = useState<number>(2);
@@ -73,6 +72,7 @@ function SparkPage() {
       const dataUrl = reader.result as string;
       const base64 = dataUrl.split(",")[1] ?? "";
       setImageBase64(base64);
+      setThumbnailDataUrl(dataUrl);
     };
     reader.readAsDataURL(file);
   };
@@ -80,6 +80,7 @@ function SparkPage() {
   const reset = () => {
     setImageBase64(null);
     setPreviewUrl(null);
+    setThumbnailDataUrl(null);
     mutation.reset();
   };
 
@@ -316,10 +317,12 @@ function SparkPage() {
           )}
 
           {mutation.data && (
-            <ResultsView
+            <SparkResultView
               data={mutation.data}
-              previewUrl={previewUrl}
+              previewUrl={thumbnailDataUrl ?? previewUrl}
               rtl={langInfo.rtl}
+              grade={grade}
+              language={lang}
               onReset={reset}
             />
           )}
@@ -355,131 +358,6 @@ function LoadingState({ previewUrl }: { previewUrl: string | null }) {
         <div className="mx-auto mt-4 h-1 w-64 overflow-hidden rounded-full bg-surface-2">
           <div className="h-full w-1/3 animate-pulse-glow bg-gradient-to-r from-spark to-rawi" />
         </div>
-      </div>
-    </div>
-  );
-}
-
-function ResultsView({
-  data,
-  previewUrl,
-  rtl,
-  onReset,
-}: {
-  data: SparkResult;
-  previewUrl: string | null;
-  rtl: boolean;
-  onReset: () => void;
-}) {
-  return (
-    <div dir={rtl ? "rtl" : "ltr"} className="space-y-5">
-      {/* Identification card */}
-      <div className="glass border-gradient-brand rounded-2xl p-6 animate-fade-up">
-        <div className="flex items-start gap-4">
-          {previewUrl && (
-            <img src={previewUrl} alt="" className="h-24 w-24 rounded-lg object-cover" />
-          )}
-          <div className="flex-1">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Detected</p>
-            <h2 className="mt-1 text-3xl font-bold">{data.objectName}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{data.objectDescription}</p>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {data.detectedMaterials.map((m) => (
-                <span key={m} className="rounded-full border border-spark/30 bg-spark/10 px-2.5 py-0.5 text-xs text-spark">
-                  {m}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Subject masonry */}
-      <div className="columns-1 gap-5 md:columns-2 space-y-5">
-        {data.subjects.map((s, i) => {
-          const color = subjectColor(s.subject);
-          return (
-            <article
-              key={i}
-              className="glass card-hover break-inside-avoid rounded-2xl p-6 animate-fade-up"
-              style={{ animationDelay: `${i * 80}ms`, borderTop: `2px solid ${color}` }}
-            >
-              <div className="flex items-center justify-between">
-                <span
-                  className="rounded-full px-2.5 py-0.5 text-xs font-medium"
-                  style={{ background: `${color}22`, color }}
-                >
-                  {s.subject}
-                </span>
-              </div>
-              <h3 className="mt-3 text-xl font-semibold leading-snug">{s.lessonTitle}</h3>
-              <div className="prose prose-invert prose-sm mt-3 max-w-none text-foreground/85">
-                {s.lesson.split(/\n\n+/).map((p, j) => (
-                  <p key={j} className="mt-2 leading-relaxed">{p}</p>
-                ))}
-              </div>
-              {s.highlight && (
-                <div
-                  className="mt-4 rounded-lg border-l-2 p-3 text-sm"
-                  style={{ borderColor: color, background: `${color}10` }}
-                >
-                  <span className="text-xs uppercase tracking-wider opacity-70">Key</span>
-                  <p className="mt-1 font-mono">{s.highlight}</p>
-                </div>
-              )}
-              {s.didYouKnow && (
-                <div className="mt-3 rounded-lg bg-surface-2/60 p-3 text-sm">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Did you know?
-                  </span>
-                  <p className="mt-1">{s.didYouKnow}</p>
-                </div>
-              )}
-              <div className="mt-4 space-y-2">
-                {s.practiceQuestions.map((q, k) => (
-                  <details key={k} className="group rounded-lg border border-border bg-surface-2/40 p-3">
-                    <summary className="cursor-pointer text-sm font-medium">
-                      Q{k + 1}. {q.question}
-                    </summary>
-                    <p className="mt-2 text-sm text-muted-foreground">{q.answer}</p>
-                  </details>
-                ))}
-              </div>
-              <Link
-                to="/rawi"
-                search={{ concept: s.lessonTitle } as never}
-                className="mt-4 inline-flex items-center gap-1 text-xs text-rawi hover:underline"
-              >
-                Take this to RAWI <ArrowRight className="h-3 w-3" />
-              </Link>
-            </article>
-          );
-        })}
-      </div>
-
-      {/* Footer actions */}
-      <div className="no-print flex flex-wrap gap-2 pt-2">
-        <button
-          onClick={() => window.print()}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 text-sm hover:bg-surface-2/70"
-        >
-          <Printer className="h-3.5 w-3.5" /> Print all
-        </button>
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(window.location.href);
-            alert("Link copied!");
-          }}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 text-sm hover:bg-surface-2/70"
-        >
-          <Share2 className="h-3.5 w-3.5" /> Share
-        </button>
-        <button
-          onClick={onReset}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 text-sm hover:bg-surface-2/70"
-        >
-          <RefreshCw className="h-3.5 w-3.5" /> SPARK something else
-        </button>
       </div>
     </div>
   );
