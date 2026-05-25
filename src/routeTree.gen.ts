@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SparkRouteImport } from './routes/spark'
 import { Route as RawiRouteImport } from './routes/rawi'
+import { Route as LibraryRouteImport } from './routes/library'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const SparkRoute = SparkRouteImport.update({
 const RawiRoute = RawiRouteImport.update({
   id: '/rawi',
   path: '/rawi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreRoute = ExploreRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/explore': typeof ExploreRoute
+  '/library': typeof LibraryRoute
   '/rawi': typeof RawiRoute
   '/spark': typeof SparkRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/explore': typeof ExploreRoute
+  '/library': typeof LibraryRoute
   '/rawi': typeof RawiRoute
   '/spark': typeof SparkRoute
 }
@@ -60,21 +68,23 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/explore': typeof ExploreRoute
+  '/library': typeof LibraryRoute
   '/rawi': typeof RawiRoute
   '/spark': typeof SparkRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/explore' | '/rawi' | '/spark'
+  fullPaths: '/' | '/about' | '/explore' | '/library' | '/rawi' | '/spark'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/explore' | '/rawi' | '/spark'
-  id: '__root__' | '/' | '/about' | '/explore' | '/rawi' | '/spark'
+  to: '/' | '/about' | '/explore' | '/library' | '/rawi' | '/spark'
+  id: '__root__' | '/' | '/about' | '/explore' | '/library' | '/rawi' | '/spark'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   ExploreRoute: typeof ExploreRoute
+  LibraryRoute: typeof LibraryRoute
   RawiRoute: typeof RawiRoute
   SparkRoute: typeof SparkRoute
 }
@@ -93,6 +103,13 @@ declare module '@tanstack/react-router' {
       path: '/rawi'
       fullPath: '/rawi'
       preLoaderRoute: typeof RawiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore': {
@@ -123,9 +140,20 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   ExploreRoute: ExploreRoute,
+  LibraryRoute: LibraryRoute,
   RawiRoute: RawiRoute,
   SparkRoute: SparkRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
