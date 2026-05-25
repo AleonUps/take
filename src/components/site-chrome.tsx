@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { Sparkles, BookMarked } from "lucide-react";
+import { useLibraryCount } from "@/lib/library";
 
 export function SiteNav() {
+  const count = useLibraryCount();
   return (
     <header className="no-print sticky top-0 z-50 w-full">
       <div className="glass border-b border-border">
@@ -24,6 +26,18 @@ export function SiteNav() {
             </Link>
             <Link to="/explore" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
               Explore
+            </Link>
+            <Link
+              to="/library"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <BookMarked className="h-3.5 w-3.5" />
+              Library
+              {count > 0 && (
+                <span className="rounded-full border border-rawi/40 bg-rawi/10 px-1.5 py-0.5 text-[10px] font-semibold text-rawi">
+                  {count}
+                </span>
+              )}
             </Link>
             <Link to="/about" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
               About

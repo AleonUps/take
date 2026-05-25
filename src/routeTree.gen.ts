@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SparkRouteImport } from './routes/spark'
 import { Route as RawiRouteImport } from './routes/rawi'
+import { Route as LibraryRouteImport } from './routes/library'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LibraryIdRouteImport } from './routes/library.$id'
 
 const SparkRoute = SparkRouteImport.update({
   id: '/spark',
@@ -23,6 +25,11 @@ const SparkRoute = SparkRouteImport.update({
 const RawiRoute = RawiRouteImport.update({
   id: '/rawi',
   path: '/rawi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreRoute = ExploreRouteImport.update({
@@ -40,41 +47,75 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LibraryIdRoute = LibraryIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => LibraryRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/explore': typeof ExploreRoute
+  '/library': typeof LibraryRouteWithChildren
   '/rawi': typeof RawiRoute
   '/spark': typeof SparkRoute
+  '/library/$id': typeof LibraryIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/explore': typeof ExploreRoute
+  '/library': typeof LibraryRouteWithChildren
   '/rawi': typeof RawiRoute
   '/spark': typeof SparkRoute
+  '/library/$id': typeof LibraryIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/explore': typeof ExploreRoute
+  '/library': typeof LibraryRouteWithChildren
   '/rawi': typeof RawiRoute
   '/spark': typeof SparkRoute
+  '/library/$id': typeof LibraryIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/explore' | '/rawi' | '/spark'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/explore'
+    | '/library'
+    | '/rawi'
+    | '/spark'
+    | '/library/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/explore' | '/rawi' | '/spark'
-  id: '__root__' | '/' | '/about' | '/explore' | '/rawi' | '/spark'
+  to:
+    | '/'
+    | '/about'
+    | '/explore'
+    | '/library'
+    | '/rawi'
+    | '/spark'
+    | '/library/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/explore'
+    | '/library'
+    | '/rawi'
+    | '/spark'
+    | '/library/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   ExploreRoute: typeof ExploreRoute
+  LibraryRoute: typeof LibraryRouteWithChildren
   RawiRoute: typeof RawiRoute
   SparkRoute: typeof SparkRoute
 }
@@ -93,6 +134,13 @@ declare module '@tanstack/react-router' {
       path: '/rawi'
       fullPath: '/rawi'
       preLoaderRoute: typeof RawiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore': {
@@ -116,13 +164,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/library/$id': {
+      id: '/library/$id'
+      path: '/$id'
+      fullPath: '/library/$id'
+      preLoaderRoute: typeof LibraryIdRouteImport
+      parentRoute: typeof LibraryRoute
+    }
   }
 }
+
+interface LibraryRouteChildren {
+  LibraryIdRoute: typeof LibraryIdRoute
+}
+
+const LibraryRouteChildren: LibraryRouteChildren = {
+  LibraryIdRoute: LibraryIdRoute,
+}
+
+const LibraryRouteWithChildren =
+  LibraryRoute._addFileChildren(LibraryRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   ExploreRoute: ExploreRoute,
+  LibraryRoute: LibraryRouteWithChildren,
   RawiRoute: RawiRoute,
   SparkRoute: SparkRoute,
 }

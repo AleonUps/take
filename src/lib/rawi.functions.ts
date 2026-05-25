@@ -11,6 +11,7 @@ const RawiInput = z.object({
   languageName: z.string().min(2).max(40),
   includeCulturalHistory: z.boolean().default(true),
   audioFriendly: z.boolean().default(false),
+  difficultyAdjust: z.enum(["simpler", "harder"]).optional(),
 });
 
 export type RawiResult = {
@@ -42,11 +43,17 @@ export const rawiGenerate = createServerFn({ method: "POST" })
     const culture = data.includeCulturalHistory
       ? " Include a cultural-history connection (a real local tradition, story, place, or historical detail)."
       : "";
+    const adjust =
+      data.difficultyAdjust === "simpler"
+        ? " Rewrite at one grade level lower. Shorter sentences, simpler vocabulary, more relatable analogies."
+        : data.difficultyAdjust === "harder"
+          ? " Rewrite at one grade level higher. Add more technical depth, academic vocabulary, and complex analytical connections."
+          : "";
 
     const user = `Concept to teach: "${data.concept}".
 Country / cultural world: ${data.countryName} (${data.countryCode}).
 Grade level: ${gradeText(data.grade)}.
-Output language: ${data.languageName} (ISO: ${data.language}). Every string must be written in ${data.languageName}.${audio}${culture}
+Output language: ${data.languageName} (ISO: ${data.language}). Every string must be written in ${data.languageName}.${audio}${culture}${adjust}
 
 Return EXACTLY this JSON:
 {
