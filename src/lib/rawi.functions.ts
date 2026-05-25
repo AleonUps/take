@@ -11,6 +11,7 @@ const RawiInput = z.object({
   languageName: z.string().min(2).max(40),
   includeCulturalHistory: z.boolean().default(true),
   audioFriendly: z.boolean().default(false),
+  difficultyAdjust: z.enum(["simpler", "harder"]).optional(),
 });
 
 export type RawiResult = {
