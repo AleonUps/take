@@ -122,6 +122,7 @@ export function RawiResultView({
   adjusting,
   adjustedDirection,
   hideSave,
+  saveMeta,
 }: {
   data: RawiResult;
   country: Country;
@@ -132,6 +133,11 @@ export function RawiResultView({
   adjusting?: boolean;
   adjustedDirection?: "simpler" | "harder" | null;
   hideSave?: boolean;
+  saveMeta?: {
+    grade: "elementary" | "middle" | "high";
+    language: string;
+    languageName: string;
+  };
 }) {
   const [localOpen, setLocalOpen] = useState(false);
   const showComparison = showComparisonProp ?? localOpen;
@@ -151,9 +157,9 @@ export function RawiResultView({
       countryCode: country.code,
       countryFlag: country.flag,
       countryName: country.name,
-      grade: "middle", // overridden at call site if needed
-      language: rtl ? "ar" : "en",
-      languageName: rtl ? "العربية" : "English",
+      grade: saveMeta?.grade ?? "middle",
+      language: saveMeta?.language ?? (rtl ? "ar" : "en"),
+      languageName: saveMeta?.languageName ?? (rtl ? "العربية" : "English"),
       result: data,
     });
     setSaved(true);
