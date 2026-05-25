@@ -79,5 +79,3 @@ function SavedLessonPage() {
   );
 }
 
-// silence unused import warning when notFound not used
-void notFound;
