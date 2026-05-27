@@ -26,6 +26,27 @@ export type SparkResult = {
   }>;
 };
 
+const SparkOutput = z.object({
+  objectName: z.string(),
+  objectDescription: z.string(),
+  detectedMaterials: z.array(z.string()),
+  subjects: z.array(
+    z.object({
+      subject: z.string(),
+      lessonTitle: z.string(),
+      lesson: z.string(),
+      highlight: z.string(),
+      didYouKnow: z.string(),
+      practiceQuestions: z.array(
+        z.object({
+          question: z.string(),
+          answer: z.string(),
+        }),
+      ),
+    }),
+  ),
+});
+
 const gradeText = (g: string) =>
   g === "elementary"
     ? "elementary (ages 6-10): use simple sentences, concrete examples, and hands-on framing"
@@ -71,7 +92,7 @@ Return EXACTLY this JSON shape:
   ]
 }`;
 
-    const result = (await chatJSON({
+    const raw = await chatJSON({
       messages: [
         { role: "system", content: system },
         {
@@ -85,7 +106,13 @@ Return EXACTLY this JSON shape:
           ],
         },
       ],
-    })) as SparkResult;
+    });
 
-    return result;
+    const parsed = SparkOutput.safeParse(raw);
+    if (!parsed.success) {
+      throw new Error(
+        `AI returned invalid data: ${parsed.error.issues.map((i) => i.path.join(".") + " " + i.message).join("; ")}`,
+      );
+    }
+    return parsed.data as SparkResult;
   });

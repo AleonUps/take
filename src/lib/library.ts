@@ -58,7 +58,7 @@ export function saveToLibrary(
     | Omit<SparkEntry, "id" | "savedAt">
     | Omit<RawiEntry, "id" | "savedAt">,
 ): string {
-  const id = `${entry.kind}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const id = `${entry.kind}_${crypto.randomUUID()}`;
   const full = { ...entry, id, savedAt: Date.now() } as LibraryEntry;
   const existing = read();
   write([full, ...existing]);
@@ -74,10 +74,9 @@ export function getEntry(id: string): LibraryEntry | null {
 }
 
 export function useLibrary(): LibraryEntry[] {
-  const [items, setItems] = useState<LibraryEntry[]>([]);
+  const [items, setItems] = useState<LibraryEntry[]>(() => read());
   useEffect(() => {
     const sync = () => setItems(read());
-    sync();
     window.addEventListener(EVT, sync);
     window.addEventListener("storage", sync);
     return () => {

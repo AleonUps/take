@@ -27,6 +27,31 @@ export type RawiResult = {
   genericVersion: string;
 };
 
+const RawiOutput = z.object({
+  conceptTitle: z.string(),
+  culturalHook: z.string(),
+  readingTimeMinutes: z.number(),
+  storyLesson: z.string(),
+  pullQuote: z.string(),
+  examples: z.array(
+    z.object({
+      title: z.string(),
+      explanation: z.string(),
+      localContext: z.string(),
+    }),
+  ),
+  practiceProblems: z.array(
+    z.object({
+      question: z.string(),
+      answer: z.string(),
+      hint: z.string(),
+    }),
+  ),
+  keyConcepts: z.array(z.string()),
+  culturalConnection: z.string(),
+  genericVersion: z.string(),
+});
+
 const gradeText = (g: string) =>
   g === "elementary"
     ? "elementary (ages 6-10) — simple sentences"
@@ -73,12 +98,18 @@ Return EXACTLY this JSON:
   "genericVersion": string (2 sentences — the generic textbook way the same concept is usually taught)
 }`;
 
-    const result = (await chatJSON({
+    const raw = await chatJSON({
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-    })) as RawiResult;
+    });
 
-    return result;
+    const parsed = RawiOutput.safeParse(raw);
+    if (!parsed.success) {
+      throw new Error(
+        `AI returned invalid data: ${parsed.error.issues.map((i) => i.path.join(".") + " " + i.message).join("; ")}`,
+      );
+    }
+    return parsed.data as RawiResult;
   });

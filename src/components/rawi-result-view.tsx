@@ -50,7 +50,7 @@ function extractLocalTerms(data: RawiResult): string[] {
     data.culturalConnection,
     ...data.examples.map((e) => `${e.title} ${e.localContext}`),
   ].join(" ");
-  const matches = text.match(/\b[A-Z][a-zA-Zà-ÿ'’-]{2,}(?:\s+[A-Z][a-zA-Zà-ÿ'’-]{2,}){0,2}\b/g) ?? [];
+  const matches = text.match(/\b[A-Z][a-zA-Zà-ÿ''-]{2,}(?:\s+[A-Z][a-zA-Zà-ÿ''-]{2,}){0,2}\b/g) ?? [];
   const stop = new Set([
     "The", "This", "That", "These", "Those", "When", "Where", "While", "After", "Before",
     "Every", "Their", "Then", "Some", "Many", "From", "With", "Without", "And", "But",
@@ -165,6 +165,14 @@ export function RawiResultView({
     setSaved(true);
   };
 
+  const handleShare = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("concept", data.conceptTitle);
+    url.searchParams.set("grade", saveMeta?.grade ?? "middle");
+    url.searchParams.set("lang", saveMeta?.language ?? (rtl ? "ar" : "en"));
+    navigator.clipboard.writeText(url.toString());
+  };
+
   return (
     <article dir={rtl ? "rtl" : "ltr"} className="space-y-2">
       {/* Header */}
@@ -206,9 +214,7 @@ export function RawiResultView({
             <Printer className="h-3 w-3" /> Print
           </button>
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(window.location.href);
-            }}
+            onClick={handleShare}
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs hover:bg-surface-2/70"
           >
             <Share2 className="h-3 w-3" /> Share

@@ -71,6 +71,11 @@ function SavedLessonPage() {
               }
               rtl={LANGUAGES.find((l) => l.code === entry.language)?.rtl ?? false}
               hideSave
+              saveMeta={{
+                grade: entry.grade,
+                language: entry.language,
+                languageName: entry.languageName,
+              }}
             />
           )}
         </div>
@@ -78,4 +83,3 @@ function SavedLessonPage() {
     </div>
   );
 }
-
