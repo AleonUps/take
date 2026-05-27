@@ -240,9 +240,10 @@ export function SparkResultView({
         </button>
         <button
           onClick={() => {
-            navigator.clipboard.writeText(window.location.href);
+            navigator.clipboard.writeText(window.location.origin + "/spark");
           }}
           className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-4 py-2 text-sm hover:bg-surface-2/70"
+          title="Results are not stored server-side; this copies the SPARK page URL"
         >
           <Share2 className="h-3.5 w-3.5" /> Share
         </button>
