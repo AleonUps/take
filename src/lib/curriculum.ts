@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 export type CurriculumEntry = {
   id: string;
   career: string;
@@ -12,19 +14,16 @@ export type CurriculumEntry = {
   curriculum: CurriculumSubject[];
   createdAt: number;
 };
-
 export type CurriculumSubject = {
   subject: string;
   color: string;
   topics: CurriculumTopic[];
 };
-
 export type CurriculumTopic = {
   id: string;
   title: string;
   completed: boolean;
 };
-
 export type OracleProfile = {
   career: string;
   learningStyle: string;
@@ -38,7 +37,6 @@ export type OracleProfile = {
   gaps: string[];
   curriculum: CurriculumSubject[];
 };
-
 export type YouTubeVideo = {
   id: string;
   title: string;
@@ -47,18 +45,15 @@ export type YouTubeVideo = {
   channelTitle: string;
   url: string;
 };
-
 export type FreeCourse = {
   title: string;
   platform: string;
   url: string;
   description: string;
 };
-
 const KEY_CURRICULUM = "educis_curriculum";
 const KEY_ORACLE = "educis_oracle_profile";
 const EVT = "educis-curriculum-update";
-
 function readCurriculum(): CurriculumEntry | null {
   if (typeof window === "undefined") return null;
   try {
@@ -69,7 +64,6 @@ function readCurriculum(): CurriculumEntry | null {
     return null;
   }
 }
-
 function writeCurriculum(entry: CurriculumEntry) {
   if (typeof window === "undefined") return;
   try {
@@ -79,15 +73,12 @@ function writeCurriculum(entry: CurriculumEntry) {
     console.error("Curriculum save failed", e);
   }
 }
-
 export function saveCurriculum(entry: CurriculumEntry) {
   writeCurriculum(entry);
 }
-
 export function getCurriculum(): CurriculumEntry | null {
   return readCurriculum();
 }
-
 export function toggleTopicComplete(curriculumId: string, topicId: string): boolean {
   const entry = readCurriculum();
   if (!entry) return false;
@@ -102,7 +93,6 @@ export function toggleTopicComplete(curriculumId: string, topicId: string): bool
   }
   return false;
 }
-
 export function getCurriculumProgress(): { total: number; completed: number } {
   const entry = readCurriculum();
   if (!entry) return { total: 0, completed: 0 };
@@ -116,7 +106,6 @@ export function getCurriculumProgress(): { total: number; completed: number } {
   }
   return { total, completed };
 }
-
 export function useCurriculum() {
   const [entry, setEntry] = useState<CurriculumEntry | null>(() => readCurriculum());
   useEffect(() => {
@@ -130,7 +119,6 @@ export function useCurriculum() {
   }, []);
   return entry;
 }
-
 export function saveOracleProfile(profile: OracleProfile) {
   if (typeof window === "undefined") return;
   try {
@@ -139,7 +127,6 @@ export function saveOracleProfile(profile: OracleProfile) {
     console.error("Oracle profile save failed", e);
   }
 }
-
 export function getOracleProfile(): OracleProfile | null {
   if (typeof window === "undefined") return null;
   try {
@@ -150,5 +137,3 @@ export function getOracleProfile(): OracleProfile | null {
     return null;
   }
 }
-
-import { useEffect, useState } from "react";
