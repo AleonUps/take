@@ -8,7 +8,6 @@ import { generateProfile, type OracleProfileResult } from "@/lib/oracle-profile.
 import { saveOracleProfile, saveCurriculum, type CurriculumSubject } from "@/lib/curriculum";
 
 type Stage = "conversation" | "report" | "handoff";
-
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 export const Route = createFileRoute("/oracle")({
@@ -113,7 +112,11 @@ function OraclePage() {
       curriculum: profile.curriculum.map((c) => ({
         subject: c.subject,
         color: c.color,
-        topics: c.topics.map((t) => ({ id: `${c.subject}_${t.replace(/\s+/g, "_").slice(0, 30)}`, title: t, completed: false })),
+        topics: c.topics.map((t) => ({
+          id: `${c.subject}_${t.replace(/\s+/g, "_").slice(0, 30)}`,
+          title: t,
+          completed: false,
+        })),
       })),
     });
     saveCurriculum({
@@ -130,22 +133,28 @@ function OraclePage() {
       curriculum: profile.curriculum.map((c) => ({
         subject: c.subject,
         color: c.color,
-        topics: c.topics.map((t) => ({ id: `${c.subject}_${t.replace(/\s+/g, "_").slice(0, 30)}`, title: t, completed: false })),
+        topics: c.topics.map((t) => ({
+          id: `${c.subject}_${t.replace(/\s+/g, "_").slice(0, 30)}`,
+          title: t,
+          completed: false,
+        })),
       })),
       createdAt: Date.now(),
     });
-    const params = new URLSearchParams({
-      career: profile.career,
-      countryCode: profile.countryCode,
-      countryName: profile.country,
-      lang: profile.language,
-      langName: profile.languageName,
-      grade: profile.grade,
-      style: profile.learningStyle,
-      fromOracle: "true",
-      subjects: profile.curriculum.map((c) => c.subject).join(","),
+    navigate({
+      to: "/rawi",
+      search: {
+        career: profile.career,
+        countryCode: profile.countryCode,
+        countryName: profile.country,
+        lang: profile.language,
+        langName: profile.languageName,
+        grade: profile.grade,
+        style: profile.learningStyle,
+        fromOracle: "true",
+        subjects: profile.curriculum.map((c) => c.subject).join(","),
+      },
     });
-    navigate({ to: `/rawi?${params.toString()}` });
   };
 
   if (stage === "conversation") {
@@ -195,7 +204,6 @@ function OraclePage() {
             </div>
           ) : (
             <div className="flex min-h-[80vh] flex-col">
-              {/* Progress */}
               <div className="glass rounded-xl p-3 mb-4">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Exchange {exchangeCount} of ~15</span>
@@ -209,7 +217,6 @@ function OraclePage() {
                 </div>
               </div>
 
-              {/* Messages */}
               <div className="flex-1 overflow-y-auto space-y-4 py-4">
                 {messages.map((msg, i) => (
                   <div
@@ -224,14 +231,15 @@ function OraclePage() {
                           : "bg-surface-2 text-foreground/90 rounded-bl-sm border border-border"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content.replace("[PROFILE_READY]", "")}</p>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {msg.content.replace("[PROFILE_READY]", "")}
+                      </p>
                     </div>
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
               <div className="border-t border-border pt-4">
                 {error && (
                   <p className="mb-2 text-sm text-destructive">{error}</p>
@@ -266,7 +274,11 @@ function OraclePage() {
                       disabled={chatMutation.isPending || !input.trim()}
                       className="btn-oracle inline-flex items-center gap-2 rounded-xl px-6 py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {chatMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                      {chatMutation.isPending ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="h-5 w-5" />
+                      )}
                     </button>
                   </form>
                 )}
@@ -282,7 +294,6 @@ function OraclePage() {
     return (
       <div className="mesh-oracle min-h-screen" data-tool="oracle">
         <div className="mx-auto max-w-4xl px-4 py-12">
-          {/* Identity Card */}
           <div className="glass-strong border-gradient-oracle rounded-3xl p-8 md:p-10 animate-fade-up">
             <div className="flex items-center gap-3 mb-6">
               <div className="grid h-12 w-12 place-items-center rounded-xl bg-oracle/15 border border-oracle/30">
@@ -294,7 +305,6 @@ function OraclePage() {
               </div>
             </div>
 
-            {/* Career */}
             <div className="glass rounded-2xl p-6 mb-4 border-l-4 border-oracle">
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">Dream Career</p>
               <TypewriterText text={profile.career} className="text-2xl font-bold text-foreground" speed={40} />
@@ -315,36 +325,45 @@ function OraclePage() {
               </div>
             </div>
 
-            {/* Strengths */}
             <div className="glass rounded-2xl p-5 mb-4">
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Your Strengths</p>
               <div className="flex flex-wrap gap-2">
                 {profile.strengths.map((s, i) => (
-                  <span key={i} className="rounded-full border border-oracle/30 bg-oracle/10 px-3 py-1 text-sm text-oracle animate-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
+                  <span
+                    key={i}
+                    className="rounded-full border border-oracle/30 bg-oracle/10 px-3 py-1 text-sm text-oracle animate-fade-up"
+                    style={{ animationDelay: `${i * 100}ms` }}
+                  >
                     {s}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Gaps */}
             <div className="glass rounded-2xl p-5 mb-4">
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Knowledge Gaps</p>
               <div className="flex flex-wrap gap-2">
                 {profile.gaps.map((g, i) => (
-                  <span key={i} className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-sm text-destructive animate-fade-up" style={{ animationDelay: `${i * 100 + 300}ms` }}>
+                  <span
+                    key={i}
+                    className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-sm text-destructive animate-fade-up"
+                    style={{ animationDelay: `${i * 100 + 300}ms` }}
+                  >
                     {g}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Curriculum */}
             <div className="mt-6">
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">Your Curriculum Path</p>
               <div className="space-y-3">
                 {profile.curriculum.map((subj, i) => (
-                  <div key={i} className="glass rounded-xl p-4 animate-fade-up" style={{ animationDelay: `${i * 120 + 600}ms`, borderLeft: `3px solid ${subj.color}` }}>
+                  <div
+                    key={i}
+                    className="glass rounded-xl p-4 animate-fade-up"
+                    style={{ animationDelay: `${i * 120 + 600}ms`, borderLeft: `3px solid ${subj.color}` }}
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-semibold text-sm" style={{ color: subj.color }}>{subj.subject}</span>
                       <span className="text-xs text-muted-foreground">{subj.topics.length} topics</span>
@@ -360,7 +379,6 @@ function OraclePage() {
             </div>
           </div>
 
-          {/* Handoff */}
           <div className="mt-8 text-center animate-fade-up" style={{ animationDelay: "800ms" }}>
             <div className="flex items-center justify-center gap-4 mb-6">
               <div className="grid h-10 w-10 place-items-center rounded-lg bg-oracle/15 border border-oracle/30">
@@ -391,7 +409,15 @@ function OraclePage() {
   return null;
 }
 
-function TypewriterText({ text, className = "", speed = 30 }: { text: string; className?: string; speed?: number }) {
+function TypewriterText({
+  text,
+  className = "",
+  speed = 30,
+}: {
+  text: string;
+  className?: string;
+  speed?: number;
+}) {
   const [displayed, setDisplayed] = useState("");
   useEffect(() => {
     setDisplayed("");
@@ -406,5 +432,10 @@ function TypewriterText({ text, className = "", speed = 30 }: { text: string; cl
     }, speed);
     return () => clearInterval(timer);
   }, [text, speed]);
-  return <span className={className}>{displayed}<span className="animate-pulse">|</span></span>;
+  return (
+    <span className={className}>
+      {displayed}
+      <span className="animate-pulse">|</span>
+    </span>
+  );
 }
