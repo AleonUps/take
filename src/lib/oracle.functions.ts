@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { chatJSON } from "@/lib/ai-gateway.server";
 
 const OracleConversationInput = z.object({
   messages: z.array(z.object({
@@ -37,17 +36,6 @@ Rules:
 - Keep each response to 2-3 short paragraphs max
 - Write in simple, clear English unless they're using another language`;
 
-    const result = await chatJSON({
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: system },
-        ...data.messages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
-      ],
-      response_format: undefined,
-    });
-
-    // chatJSON returns parsed JSON but we want raw text here
-    // So we need to call the gateway directly for text responses
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
