@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 export type CurriculumEntry = {
   id: string;
   career: string;
@@ -150,5 +152,3 @@ export function getOracleProfile(): OracleProfile | null {
     return null;
   }
 }
-
-import { useEffect, useState } from "react";
