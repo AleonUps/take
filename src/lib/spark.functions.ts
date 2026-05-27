@@ -93,6 +93,7 @@ Return EXACTLY this JSON shape:
 }`;
 
     const raw = await chatJSON({
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
       messages: [
         { role: "system", content: system },
         {
