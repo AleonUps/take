@@ -7,14 +7,12 @@ export function getApiKey(): string {
   return key;
 }
 
+type TextContent = { type: "text"; text: string };
+type ImageContent = { type: "image_url"; image_url: { url: string } };
+
 type ChatMessage = {
   role: "system" | "user" | "assistant";
-  content:
-    | string
-    | Array
-        | { type: "text"; text: string }
-        | { type: "image_url"; image_url: { url: string } }
-      >;
+  content: string | Array<TextContent | ImageContent>;
 };
 
 export async function chatJSON({
