@@ -1,4 +1,4 @@
-\import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -7,7 +7,6 @@ import {
   RefreshCw,
   Sparkles,
   ArrowLeft,
-  Eye,
   CheckCircle2,
   Circle,
   ExternalLink,
@@ -57,7 +56,7 @@ export const Route = createFileRoute("/rawi")({
   }),
   head: () => ({
     meta: [
-      { title: "RAWI — Your world, your lesson · EDUCIS" },
+      { title: "RAWI -- Your world, your lesson · EDUCIS" },
       { name: "description", content: "RAWI rewrites any concept as a story rooted in your country, your culture, and your language." },
       { property: "og:title", content: "RAWI · EDUCIS" },
       { property: "og:description", content: "50 countries · 6 languages · Real local stories, not generic textbooks." },
@@ -67,12 +66,12 @@ export const Route = createFileRoute("/rawi")({
 });
 
 const PLACEHOLDERS = [
-  "photosynthesis…",
-  "quadratic equations…",
-  "the water cycle…",
-  "the French Revolution…",
-  "Newton's laws…",
-  "supply and demand…",
+  "photosynthesis...",
+  "quadratic equations...",
+  "the water cycle...",
+  "the French Revolution...",
+  "Newton's laws...",
+  "supply and demand...",
 ];
 
 function RawiPage() {
@@ -203,7 +202,6 @@ function RawiPage() {
     });
   };
 
-  // Auto-start first subject when coming from oracle
   useEffect(() => {
     if (isOracleMode && oracleSubjects.length > 0 && !autoStarted.current) {
       autoStarted.current = true;
@@ -223,7 +221,6 @@ function RawiPage() {
     <div className="mesh-rawi min-h-screen" data-tool="rawi">
       <div className="mx-auto max-w-5xl px-4 py-12">
 
-        {/* Oracle pipeline banner */}
         {isOracleMode && (
           <div className="mb-6 flex items-center justify-between rounded-xl border border-oracle/40 bg-oracle/10 px-4 py-3 text-sm animate-fade-up">
             <div className="flex items-center gap-3">
@@ -240,7 +237,6 @@ function RawiPage() {
           </div>
         )}
 
-        {/* Progress bar */}
         {isOracleMode && totalTopics > 0 && (
           <div className="mb-6 glass rounded-xl p-4 animate-fade-up">
             <div className="flex items-center justify-between mb-2">
@@ -259,7 +255,6 @@ function RawiPage() {
           </div>
         )}
 
-        {/* Curriculum mode */}
         {isOracleMode && oracleSubjects.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
@@ -267,7 +262,6 @@ function RawiPage() {
               <h2 className="text-2xl font-bold">Your Curriculum</h2>
             </div>
 
-            {/* Subject tabs */}
             <div className="flex flex-wrap gap-2 mb-6">
               {oracleSubjects.map((subj, i) => {
                 const lesson = curriculumLessons.get(subj);
@@ -298,15 +292,13 @@ function RawiPage() {
               })}
             </div>
 
-            {/* Loading state */}
             {activeSubject && curriculumMutation.isPending && (
               <div className="glass rounded-2xl p-10 text-center">
                 <div className="mx-auto h-16 w-16 animate-pulse-glow rounded-full bg-gradient-to-br from-rawi to-rawi/40" />
-                <p className="mt-6 font-serif text-xl text-rawi italic">Building {activeSubject} for your world…</p>
+                <p className="mt-6 font-serif text-xl text-rawi italic">Building {activeSubject} for your world...</p>
               </div>
             )}
 
-            {/* Lesson content */}
             {activeSubject && curriculumLessons.has(activeSubject) && !curriculumMutation.isPending && (
               <CurriculumLessonView
                 lesson={curriculumLessons.get(activeSubject)!}
@@ -320,7 +312,6 @@ function RawiPage() {
           </div>
         )}
 
-        {/* Standard RAWI (non-oracle mode) */}
         {!isOracleMode && (
           <>
             <div className="text-center">
@@ -349,7 +340,7 @@ function RawiPage() {
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Country / cultural world</p>
-                  <input value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} placeholder="Search…" className="rounded-md border border-border bg-surface-2 px-2 py-1 text-xs focus:border-rawi focus:outline-none" />
+                  <input value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} placeholder="Search..." className="rounded-md border border-border bg-surface-2 px-2 py-1 text-xs focus:border-rawi focus:outline-none" />
                 </div>
                 <div className="max-h-56 overflow-y-auto rounded-xl border border-border bg-surface-2/40 p-3 space-y-3">
                   {Object.entries(regions).map(([region, list]) => (
@@ -404,7 +395,7 @@ function RawiPage() {
               </div>
 
               <button onClick={() => mutation.mutate(undefined)} disabled={!concept.trim() || mutation.isPending} className="btn-rawi w-full rounded-xl px-4 py-4 text-base font-semibold disabled:cursor-not-allowed disabled:opacity-50">
-                {isInitialPending ? "Rewriting for your world…" : "✦ Rewrite for My World"}
+                {isInitialPending ? "Rewriting for your world..." : "Rewrite for My World"}
               </button>
             </div>
 
@@ -478,7 +469,6 @@ function CurriculumLessonView({
             className={`glass rounded-2xl p-6 animate-fade-up transition-all ${isCompleted ? "border border-success/30 bg-success/5" : ""}`}
             style={{ animationDelay: `${i * 80}ms` }}
           >
-            {/* Header */}
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-xl font-semibold">{l.title}</h3>
               <button
@@ -493,22 +483,18 @@ function CurriculumLessonView({
               </button>
             </div>
 
-            {/* Explanation */}
             <div className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">{l.explanation}</div>
 
-            {/* Local example */}
             <div className="mt-4 rounded-lg border border-rawi/20 bg-rawi/5 p-4">
               <p className="text-xs uppercase tracking-widest text-rawi mb-2">In {countryName}</p>
               <p className="text-sm italic text-foreground/90">{l.localExample}</p>
             </div>
 
-            {/* Practice */}
             <details className="mt-4 rounded-lg border border-border bg-surface-2/40 p-3">
               <summary className="cursor-pointer text-sm font-medium">Practice: {l.practiceQuestion}</summary>
               <p className="mt-2 text-sm text-muted-foreground">{l.practiceAnswer}</p>
             </details>
 
-            {/* YouTube videos */}
             {videos.length > 0 && (
               <div className="mt-5">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Related Videos</p>
@@ -530,39 +516,38 @@ function CurriculumLessonView({
               </div>
             )}
 
-            {/* Resource hub */}
             <div className="mt-5 rounded-xl border border-border bg-surface-2/20 p-4">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Free Resources</p>
               <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                 <a href={`https://www.khanacademy.org/search?page_search_query=${encodeURIComponent(l.title)}`}
                   target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <span className="text-base">🎓</span> Khan Academy
+                  <ExternalLink className="h-3 w-3" /> Khan Academy
                 </a>
                 <a href={`https://ocw.mit.edu/search/?q=${encodeURIComponent(l.title)}`}
                   target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <span className="text-base">🏛️</span> MIT OCW
+                  <ExternalLink className="h-3 w-3" /> MIT OCW
                 </a>
                 <a href={`https://www.coursera.org/search?query=${encodeURIComponent(l.title)}&productType=Course&price=Free`}
                   target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <span className="text-base">📚</span> Coursera Free
+                  <ExternalLink className="h-3 w-3" /> Coursera Free
                 </a>
                 <a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(l.title)}+lesson`}
                   target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <span className="text-base">▶️</span> YouTube
+                  <ExternalLink className="h-3 w-3" /> YouTube
                 </a>
                 <a href={`https://www.freecodecamp.org/news/search/?query=${encodeURIComponent(l.title)}`}
                   target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <span className="text-base">💻</span> freeCodeCamp
+                  <ExternalLink className="h-3 w-3" /> freeCodeCamp
                 </a>
                 <a href={`https://scholar.google.com/scholar?q=${encodeURIComponent(l.title)}`}
                   target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <span className="text-base">🔬</span> Google Scholar
+                  <ExternalLink className="h-3 w-3" /> Google Scholar
                 </a>
               </div>
             </div>
@@ -576,11 +561,11 @@ function CurriculumLessonView({
 function RawiLoading({ country }: { country: string }) {
   const msgs = useMemo(
     () => [
-      `Walking through the markets of ${country}…`,
-      `Listening to elders in ${country}…`,
-      `Weaving the lesson into ${country}'s world…`,
-      `Choosing the right local names…`,
-      `Rewriting in your voice…`,
+      `Walking through the markets of ${country}...`,
+      `Listening to elders in ${country}...`,
+      `Weaving the lesson into ${country}'s world...`,
+      `Choosing the right local names...`,
+      `Rewriting in your voice...`,
     ],
     [country],
   );
