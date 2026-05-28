@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+\import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   RefreshCw,
@@ -10,8 +10,9 @@ import {
   Eye,
   CheckCircle2,
   Circle,
-  Play,
   ExternalLink,
+  BookOpen,
+  Trophy,
 } from "lucide-react";
 import { rawiGenerate, type RawiResult } from "@/lib/rawi.functions";
 import { generateCurriculumLesson, type CurriculumLesson } from "@/lib/curriculum.functions";
@@ -81,7 +82,7 @@ function RawiPage() {
   const ytFn = useServerFn(searchYouTube);
 
   const [concept, setConcept] = useState(search.concept ?? "");
-  const [country, setCountry] = useState<string>(search.countryCode ?? "NG");
+  const [country, setCountry] = useState<string>(search.countryCode ?? "SA");
   const [grade, setGrade] = useState<"elementary" | "middle" | "high">(search.grade ?? "middle");
   const [lang, setLang] = useState<string>(search.lang ?? "en");
   const [includeHistory, setIncludeHistory] = useState(true);
@@ -95,6 +96,9 @@ function RawiPage() {
   const [curriculumSubjects, setCurriculumSubjects] = useState<CurriculumSubject[]>([]);
   const [activeSubject, setActiveSubject] = useState<string | null>(null);
   const [videoCache, setVideoCache] = useState<Map<string, YouTubeResult[]>>(new Map());
+  const [completedTopics, setCompletedTopics] = useState<Set<string>>(new Set());
+
+  const autoStarted = useRef(false);
 
   const isOracleMode = search.fromOracle === "true" && !!search.career;
   const oracleCareer = search.career ?? "";
@@ -105,16 +109,18 @@ function RawiPage() {
     return () => clearInterval(t);
   }, []);
 
-  // Load saved curriculum
   useEffect(() => {
     const saved = getCurriculum();
     if (saved) {
       setCurriculumSubjects(saved.curriculum);
+      const completed = new Set<string>();
+      saved.curriculum.forEach((s) => s.topics.forEach((t) => { if (t.completed) completed.add(t.id); }));
+      setCompletedTopics(completed);
     }
   }, []);
 
   const langInfo = LANGUAGES.find((l) => l.code === lang)!;
-  const countryInfo = COUNTRIES.find((c) => c.code === country)!;
+  const countryInfo = COUNTRIES.find((c) => c.code === country) ?? COUNTRIES.find((c) => c.code === "SA")!;
 
   const regions = useMemo(() => {
     const filtered = COUNTRIES.filter(
@@ -155,7 +161,6 @@ function RawiPage() {
     },
   });
 
-  // Curriculum lesson mutation
   const curriculumMutation = useMutation<CurriculumLesson, Error, { subject: string; index: number }>({
     mutationFn: async ({ subject, index }) => {
       return (await curriculumFn({
@@ -173,36 +178,51 @@ function RawiPage() {
       })) as CurriculumLesson;
     },
     onSuccess: (data) => {
-      setCurriculumLessons((prev) => new Map(prev).set(data.chapterTitle, data));
+      setCurriculumLessons((prev) => new Map(prev).set(activeSubject ?? data.chapterTitle, data));
     },
   });
 
-  // Fetch videos for a topic
   const fetchVideos = async (topic: string) => {
     if (videoCache.has(topic)) return;
     try {
-      const result = await ytFn({ data: { query: `${topic} ${countryInfo.name}`, maxResults: 3 } });
-      setVideoCache((prev) => new Map(prev).set(topic, result as YouTubeResult[]));
+      const res = await ytFn({ data: { query: `${topic} tutorial`, maxResults: 3 } });
+      setVideoCache((prev) => new Map(prev).set(topic, res as YouTubeResult[]));
     } catch {
-      // graceful fallback
+      setVideoCache((prev) => new Map(prev).set(topic, []));
     }
   };
+
+  const handleToggleComplete = (topicId: string) => {
+    const saved = getCurriculum();
+    if (!saved) return;
+    const newVal = toggleTopicComplete(saved.id, topicId);
+    setCompletedTopics((prev) => {
+      const next = new Set(prev);
+      if (newVal) next.add(topicId); else next.delete(topicId);
+      return next;
+    });
+  };
+
+  // Auto-start first subject when coming from oracle
+  useEffect(() => {
+    if (isOracleMode && oracleSubjects.length > 0 && !autoStarted.current) {
+      autoStarted.current = true;
+      const first = oracleSubjects[0];
+      setActiveSubject(first);
+      curriculumMutation.mutate({ subject: first, index: 0 });
+    }
+  }, [isOracleMode]);
 
   const isInitialPending = mutation.isPending && !mutation.variables?.adjust;
   const isAdjusting = mutation.isPending && !!mutation.variables?.adjust;
 
-  // Auto-start curriculum generation when coming from oracle
-  useEffect(() => {
-    if (isOracleMode && oracleSubjects.length > 0 && !activeSubject && !curriculumMutation.isPending) {
-      const firstSubject = oracleSubjects[0];
-      setActiveSubject(firstSubject);
-      curriculumMutation.mutate({ subject: firstSubject, index: 0 });
-    }
-  }, [isOracleMode, oracleSubjects, activeSubject]);
+  const totalTopics = curriculumSubjects.reduce((a, s) => a + s.topics.length, 0);
+  const completedCount = completedTopics.size;
 
   return (
     <div className="mesh-rawi min-h-screen" data-tool="rawi">
       <div className="mx-auto max-w-5xl px-4 py-12">
+
         {/* Oracle pipeline banner */}
         {isOracleMode && (
           <div className="mb-6 flex items-center justify-between rounded-xl border border-oracle/40 bg-oracle/10 px-4 py-3 text-sm animate-fade-up">
@@ -220,51 +240,87 @@ function RawiPage() {
           </div>
         )}
 
+        {/* Progress bar */}
+        {isOracleMode && totalTopics > 0 && (
+          <div className="mb-6 glass rounded-xl p-4 animate-fade-up">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-rawi" />
+                <span className="text-sm font-medium">Overall Progress</span>
+              </div>
+              <span className="text-sm text-rawi font-bold">{completedCount} / {totalTopics} topics</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-rawi to-rawi/60 transition-all duration-500"
+                style={{ width: `${totalTopics > 0 ? (completedCount / totalTopics) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Curriculum mode */}
         {isOracleMode && oracleSubjects.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4">Your Curriculum</h2>
-            <div className="flex flex-wrap gap-2 mb-6">
-              {oracleSubjects.map((subj, i) => (
-                <button
-                  key={subj}
-                  onClick={() => {
-                    setActiveSubject(subj);
-                    if (!curriculumLessons.has(subj)) {
-                      curriculumMutation.mutate({ subject: subj, index: i });
-                    }
-                  }}
-                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
-                    activeSubject === subj
-                      ? "border-rawi bg-rawi/15 text-rawi shadow-[0_0_18px_rgba(201,168,76,0.25)]"
-                      : "border-border bg-surface-2 hover:border-rawi/40"
-                  }`}
-                >
-                  {subj}
-                  {curriculumLessons.has(subj) && <CheckCircle2 className="ml-1.5 inline h-3 w-3 text-success" />}
-                </button>
-              ))}
+            <div className="flex items-center gap-3 mb-4">
+              <BookOpen className="h-5 w-5 text-rawi" />
+              <h2 className="text-2xl font-bold">Your Curriculum</h2>
             </div>
-            {/* Curriculum lesson content */}
+
+            {/* Subject tabs */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {oracleSubjects.map((subj, i) => {
+                const lesson = curriculumLessons.get(subj);
+                const subjTopics = curriculumSubjects.find((s) => s.subject === subj)?.topics ?? [];
+                const subjCompleted = subjTopics.filter((t) => completedTopics.has(t.id)).length;
+                return (
+                  <button
+                    key={subj}
+                    onClick={() => {
+                      setActiveSubject(subj);
+                      if (!curriculumLessons.has(subj)) {
+                        curriculumMutation.mutate({ subject: subj, index: i });
+                      }
+                    }}
+                    className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
+                      activeSubject === subj
+                        ? "border-rawi bg-rawi/15 text-rawi shadow-[0_0_18px_rgba(201,168,76,0.25)]"
+                        : "border-border bg-surface-2 hover:border-rawi/40"
+                    }`}
+                  >
+                    {subj}
+                    {lesson && subjTopics.length > 0 && (
+                      <span className="ml-2 text-xs opacity-60">{subjCompleted}/{subjTopics.length}</span>
+                    )}
+                    {lesson && <CheckCircle2 className="ml-1.5 inline h-3 w-3 text-success" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Loading state */}
             {activeSubject && curriculumMutation.isPending && (
               <div className="glass rounded-2xl p-10 text-center">
                 <div className="mx-auto h-16 w-16 animate-pulse-glow rounded-full bg-gradient-to-br from-rawi to-rawi/40" />
                 <p className="mt-6 font-serif text-xl text-rawi italic">Building {activeSubject} for your world…</p>
               </div>
             )}
+
+            {/* Lesson content */}
             {activeSubject && curriculumLessons.has(activeSubject) && !curriculumMutation.isPending && (
               <CurriculumLessonView
                 lesson={curriculumLessons.get(activeSubject)!}
                 countryName={countryInfo.name}
                 onFetchVideos={fetchVideos}
                 videoCache={videoCache}
-                subjects={curriculumSubjects}
+                completedTopics={completedTopics}
+                onToggleComplete={handleToggleComplete}
               />
             )}
           </div>
         )}
 
-        {/* Standard RAWI header (when not in oracle mode) */}
+        {/* Standard RAWI (non-oracle mode) */}
         {!isOracleMode && (
           <>
             <div className="text-center">
@@ -387,17 +443,22 @@ function CurriculumLessonView({
   countryName,
   onFetchVideos,
   videoCache,
-  subjects,
+  completedTopics,
+  onToggleComplete,
 }: {
   lesson: CurriculumLesson;
   countryName: string;
   onFetchVideos: (topic: string) => void;
   videoCache: Map<string, YouTubeResult[]>;
-  subjects: CurriculumSubject[];
+  completedTopics: Set<string>;
+  onToggleComplete: (topicId: string) => void;
 }) {
   useEffect(() => {
-    lesson.lessons.forEach((l) => onFetchVideos(l.title));
-  }, [lesson]);
+    const timer = setTimeout(() => {
+      lesson.lessons.forEach((l) => onFetchVideos(l.title));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [lesson.lessons.length]);
 
   return (
     <div className="space-y-6 animate-fade-up">
@@ -409,30 +470,39 @@ function CurriculumLessonView({
       {lesson.lessons.map((l, i) => {
         const videos = videoCache.get(l.title) ?? [];
         const topicId = `${lesson.chapterTitle}_${l.title.replace(/\s+/g, "_").slice(0, 30)}`;
-        const curriculumTopic = subjects.flatMap((s) => s.topics).find((t) => t.title === l.title);
+        const isCompleted = completedTopics.has(topicId);
 
         return (
-          <div key={i} className="glass rounded-2xl p-6 animate-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
-            <div className="flex items-start justify-between">
+          <div
+            key={i}
+            className={`glass rounded-2xl p-6 animate-fade-up transition-all ${isCompleted ? "border border-success/30 bg-success/5" : ""}`}
+            style={{ animationDelay: `${i * 80}ms` }}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between mb-3">
               <h3 className="text-xl font-semibold">{l.title}</h3>
-              {curriculumTopic && (
-                <button
-                  onClick={() => toggleTopicComplete("", topicId)}
-                  className="flex items-center gap-1.5 text-xs"
-                >
-                  {curriculumTopic.completed ? (
-                    <CheckCircle2 className="h-4 w-4 text-success" />
-                  ) : (
-                    <Circle className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </button>
-              )}
+              <button
+                onClick={() => onToggleComplete(topicId)}
+                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs transition-all hover:border-success/40"
+              >
+                {isCompleted ? (
+                  <><CheckCircle2 className="h-4 w-4 text-success" /><span className="text-success">Done</span></>
+                ) : (
+                  <><Circle className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">Mark done</span></>
+                )}
+              </button>
             </div>
-            <div className="mt-3 text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">{l.explanation}</div>
+
+            {/* Explanation */}
+            <div className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">{l.explanation}</div>
+
+            {/* Local example */}
             <div className="mt-4 rounded-lg border border-rawi/20 bg-rawi/5 p-4">
               <p className="text-xs uppercase tracking-widest text-rawi mb-2">In {countryName}</p>
               <p className="text-sm italic text-foreground/90">{l.localExample}</p>
             </div>
+
+            {/* Practice */}
             <details className="mt-4 rounded-lg border border-border bg-surface-2/40 p-3">
               <summary className="cursor-pointer text-sm font-medium">Practice: {l.practiceQuestion}</summary>
               <p className="mt-2 text-sm text-muted-foreground">{l.practiceAnswer}</p>
@@ -440,18 +510,19 @@ function CurriculumLessonView({
 
             {/* YouTube videos */}
             {videos.length > 0 && (
-              <div className="mt-4">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Related Videos</p>
+              <div className="mt-5">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Related Videos</p>
                 <div className="space-y-2">
                   {videos.map((v) => (
-                    <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer" className="flex gap-3 rounded-lg bg-surface-2/40 p-2 hover:bg-surface-2/70 transition-colors">
-                      <div className="relative h-14 w-24 flex-shrink-0 overflow-hidden rounded-md">
+                    <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer"
+                      className="flex gap-3 rounded-xl bg-surface-2/40 p-3 hover:bg-surface-2/70 transition-colors border border-border hover:border-rawi/30">
+                      <div className="relative h-16 w-28 flex-shrink-0 overflow-hidden rounded-lg">
                         <img src={v.thumbnail} alt={v.title} className="h-full w-full object-cover" />
-                        <span className="absolute bottom-0.5 right-0.5 rounded bg-black/80 px-1 text-[9px] text-white">{v.duration}</span>
+                        <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1.5 py-0.5 text-[9px] text-white">{v.duration}</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium line-clamp-2">{v.title}</p>
-                        <p className="text-[10px] text-muted-foreground">{v.channelTitle}</p>
+                        <p className="text-xs font-medium line-clamp-2 leading-relaxed">{v.title}</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">{v.channelTitle}</p>
                       </div>
                     </a>
                   ))}
@@ -459,24 +530,39 @@ function CurriculumLessonView({
               </div>
             )}
 
-            {/* Free courses */}
-            <div className="mt-3">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Free Resources</p>
-              <div className="flex flex-wrap gap-1.5">
-                <a href={`https://www.khanacademy.org/search?page_search_query=${encodeURIComponent(l.title)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-2/60 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <ExternalLink className="h-2.5 w-2.5" /> Khan Academy
+            {/* Resource hub */}
+            <div className="mt-5 rounded-xl border border-border bg-surface-2/20 p-4">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Free Resources</p>
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                <a href={`https://www.khanacademy.org/search?page_search_query=${encodeURIComponent(l.title)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
+                  <span className="text-base">🎓</span> Khan Academy
                 </a>
-                <a href={`https://ocw.mit.edu/search/?q=${encodeURIComponent(l.title)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-2/60 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <ExternalLink className="h-2.5 w-2.5" /> MIT OCW
+                <a href={`https://ocw.mit.edu/search/?q=${encodeURIComponent(l.title)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
+                  <span className="text-base">🏛️</span> MIT OCW
                 </a>
-                <a href={`https://www.coursera.org/search?query=${encodeURIComponent(l.title)}&productType=Course&price=Free`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-2/60 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <ExternalLink className="h-2.5 w-2.5" /> Coursera Free
+                <a href={`https://www.coursera.org/search?query=${encodeURIComponent(l.title)}&productType=Course&price=Free`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
+                  <span className="text-base">📚</span> Coursera Free
                 </a>
-                <a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(l.title)}+lesson`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-2/60 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <ExternalLink className="h-2.5 w-2.5" /> YouTube
+                <a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(l.title)}+lesson`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
+                  <span className="text-base">▶️</span> YouTube
                 </a>
-                <a href={`https://www.freecodecamp.org/news/search/?query=${encodeURIComponent(l.title)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md border border-border bg-surface-2/60 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
-                  <ExternalLink className="h-2.5 w-2.5" /> freeCodeCamp
+                <a href={`https://www.freecodecamp.org/news/search/?query=${encodeURIComponent(l.title)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
+                  <span className="text-base">💻</span> freeCodeCamp
+                </a>
+                <a href={`https://scholar.google.com/scholar?q=${encodeURIComponent(l.title)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/60 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-rawi/40 transition-all">
+                  <span className="text-base">🔬</span> Google Scholar
                 </a>
               </div>
             </div>
