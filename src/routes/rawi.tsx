@@ -113,7 +113,9 @@ function RawiPage() {
     if (saved) {
       setCurriculumSubjects(saved.curriculum);
       const completed = new Set<string>();
-      saved.curriculum.forEach((s) => s.topics.forEach((t) => { if (t.completed) completed.add(t.id); }));
+      saved.curriculum.forEach((s) =>
+        s.topics.forEach((t) => { if (t.completed) completed.add(t.id); })
+      );
       setCompletedTopics(completed);
     }
   }, []);
@@ -176,8 +178,8 @@ function RawiPage() {
         },
       })) as CurriculumLesson;
     },
-    onSuccess: (data) => {
-      setCurriculumLessons((prev) => new Map(prev).set(activeSubject ?? data.chapterTitle, data));
+    onSuccess: (data, variables) => {
+      setCurriculumLessons((prev) => new Map(prev).set(variables.subject, data));
     },
   });
 
@@ -213,7 +215,6 @@ function RawiPage() {
 
   const isInitialPending = mutation.isPending && !mutation.variables?.adjust;
   const isAdjusting = mutation.isPending && !!mutation.variables?.adjust;
-
   const totalTopics = curriculumSubjects.reduce((a, s) => a + s.topics.length, 0);
   const completedCount = completedTopics.size;
 
@@ -459,9 +460,9 @@ function CurriculumLessonView({
       </div>
 
       {lesson.lessons.map((l, i) => {
-        const videos = videoCache.get(l.title) ?? [];
         const topicId = `${lesson.chapterTitle}_${l.title.replace(/\s+/g, "_").slice(0, 30)}`;
         const isCompleted = completedTopics.has(topicId);
+        const videos = videoCache.get(l.title) ?? [];
 
         return (
           <div
