@@ -196,12 +196,15 @@ function RawiPage() {
   const handleToggleComplete = (topicId: string) => {
     const saved = getCurriculum();
     if (!saved) return;
-    const newVal = toggleTopicComplete(saved.id, topicId);
-    setCompletedTopics((prev) => {
-      const next = new Set(prev);
-      if (newVal) next.add(topicId); else next.delete(topicId);
-      return next;
-    });
+    toggleTopicComplete(saved.id, topicId);
+    const updated = getCurriculum();
+    if (updated) {
+      const completed = new Set<string>();
+      updated.curriculum.forEach((s) =>
+        s.topics.forEach((t) => { if (t.completed) completed.add(t.id); })
+      );
+      setCompletedTopics(completed);
+    }
   };
 
   useEffect(() => {
