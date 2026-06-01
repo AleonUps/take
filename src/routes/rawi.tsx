@@ -463,7 +463,7 @@ function CurriculumLessonView({
       </div>
 
       {lesson.lessons.map((l, i) => {
-        const topicId = `${lesson.chapterTitle}_${l.title.replace(/\s+/g, "_").slice(0, 30)}`;
+       const topicId = `${activeSubject ?? lesson.chapterTitle}_${l.title.replace(/\s+/g, "_").slice(0, 30)}`;
         const isCompleted = completedTopics.has(topicId);
         const videos = videoCache.get(l.title) ?? [];
 
