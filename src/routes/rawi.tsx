@@ -306,6 +306,7 @@ function RawiPage() {
             {activeSubject && curriculumLessons.has(activeSubject) && !curriculumMutation.isPending && (
               <CurriculumLessonView
                 lesson={curriculumLessons.get(activeSubject)!}
+                activeSubject={activeSubject}
                 countryName={countryInfo.name}
                 onFetchVideos={fetchVideos}
                 videoCache={videoCache}
@@ -435,6 +436,7 @@ function RawiPage() {
 
 function CurriculumLessonView({
   lesson,
+  activeSubject,
   countryName,
   onFetchVideos,
   videoCache,
@@ -442,6 +444,7 @@ function CurriculumLessonView({
   onToggleComplete,
 }: {
   lesson: CurriculumLesson;
+  activeSubject: string;
   countryName: string;
   onFetchVideos: (topic: string) => void;
   videoCache: Map<string, YouTubeResult[]>;
@@ -463,7 +466,7 @@ function CurriculumLessonView({
       </div>
 
       {lesson.lessons.map((l, i) => {
-       const topicId = `${activeSubject ?? lesson.chapterTitle}_${l.title.replace(/\s+/g, "_").slice(0, 30)}`;
+        const topicId = `${activeSubject}_${l.title.replace(/\s+/g, "_").slice(0, 30)}`;
         const isCompleted = completedTopics.has(topicId);
         const videos = videoCache.get(l.title) ?? [];
 
