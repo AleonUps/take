@@ -101,40 +101,41 @@
 }
 
 @layer components {
-  /* GLASS */
+  /* PREMIUM APP CHASSIS GLASS */
   .glass {
-    background: rgba(6, 12, 20, 0.75);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(0, 212, 255, 0.08);
+    background: rgba(6, 12, 20, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 212, 255, 0.06);
   }
 
   .glass-strong {
-    background: rgba(8, 16, 28, 0.92);
+    background: rgba(4, 8, 14, 0.88);
     backdrop-filter: blur(32px);
     -webkit-backdrop-filter: blur(32px);
-    border: 1px solid rgba(0, 212, 255, 0.12);
+    border: 1px solid rgba(208, 228, 240, 0.08);
   }
 
-  /* TECH GRID */
+  /* PERSISTENT DYNAMIC SPACE HOVER GRIDS */
   .tech-grid {
-    background-image: linear-gradient(rgba(0, 212, 255, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 212, 255, 0.035) 1px, transparent 1px);
-    background-size: 64px 64px;
+    background-image: linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
     background-position: center center;
+    transition: background-image 0.5s ease;
   }
 
   [data-tool="rawi"] .tech-grid {
-    background-image: linear-gradient(rgba(212, 168, 67, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(212, 168, 67, 0.035) 1px, transparent 1px);
+    background-image: linear-gradient(rgba(212, 168, 67, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(212, 168, 67, 0.025) 1px, transparent 1px);
   }
 
   [data-tool="spark"] .tech-grid {
-    background-image: linear-gradient(rgba(139, 92, 246, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(139, 92, 246, 0.035) 1px, transparent 1px);
+    background-image: linear-gradient(rgba(139, 92, 246, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 92, 246, 0.025) 1px, transparent 1px);
   }
 
-  /* HUD CARD */
+  /* CYBER HUD MODULE FRAMES */
   .hud-card {
     position: relative;
     @apply transition-all duration-300;
@@ -145,14 +146,14 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 20px;
-    height: 20px;
-    border-top: 1px solid var(--oracle);
-    border-left: 1px solid var(--oracle);
-    opacity: 0.6;
+    width: 16px;
+    height: 16px;
+    border-top: 2px solid var(--oracle);
+    border-left: 2px solid var(--oracle);
+    opacity: 0.4;
     pointer-events: none;
     z-index: 2;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s, border-color 0.3s;
   }
 
   .hud-card::after {
@@ -160,14 +161,14 @@
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 20px;
-    height: 20px;
-    border-bottom: 1px solid var(--oracle);
-    border-right: 1px solid var(--oracle);
-    opacity: 0.6;
+    width: 16px;
+    height: 16px;
+    border-bottom: 2px solid var(--oracle);
+    border-right: 2px solid var(--oracle);
+    opacity: 0.4;
     pointer-events: none;
     z-index: 2;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s, border-color 0.3s;
   }
 
   .hud-card:hover::before,
@@ -176,41 +177,34 @@
   }
 
   .hud-card-rawi::before,
-  .hud-card-rawi::after {
-    border-color: var(--rawi) !important;
-  }
-
+  .hud-card-rawi::after { border-color: var(--rawi) !important; }
+  
   .hud-card-spark::before,
-  .hud-card-spark::after {
-    border-color: var(--spark) !important;
-  }
+  .hud-card-spark::after { border-color: var(--spark) !important; }
 
-  /* BUTTONS */
+  /* PRODUCTION BUTTONS */
   .btn-oracle {
     background: linear-gradient(135deg, #00d4ff, #40e8ff);
     color: #000810;
-    @apply font-bold;
-    box-shadow: 0 0 24px rgba(0, 212, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    transition: all 0.2s ease;
+    @apply font-bold tracking-wide rounded-lg px-6 py-2.5;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .btn-oracle:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0 50px rgba(0, 212, 255, 0.6), 0 16px 40px -8px rgba(0, 212, 255, 0.5);
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.5), 0 12px 24px -8px rgba(0, 212, 255, 0.4);
   }
 
   /* ───────────────────────────────────────────────
-     PREMIUM CATEGORY CHIPS — ULTRA HUD VERSION
+     HIGH-TIER CATEGORY INTERACTION MODULES
      ─────────────────────────────────────────────── */
   .category-chip {
-    @apply flex items-center justify-center px-5 py-2.5 rounded-full cursor-pointer select-none;
-    /* Layered deep glass container foundation */
+    @apply flex items-center justify-center px-5 py-2 rounded-full cursor-pointer select-none;
     background: radial-gradient(100% 100% at 50% 0%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    
-    /* Sub-pixel perimeter separation line */
-    border: 1px solid rgba(208, 228, 240, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(208, 228, 240, 0.05);
     color: var(--muted-foreground);
     font-family: var(--font-sans);
     font-size: 0.8125rem;
@@ -219,126 +213,93 @@
     position: relative;
     overflow: hidden;
     z-index: 1;
-    
-    /* Premium transition easing curve array */
     transition: 
-      background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-      border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-      color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* Micro bevel top shimmer highlight reflection */
   .category-chip::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
-    opacity: 1;
-    transition: opacity 0.3s ease;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%);
     pointer-events: none;
     z-index: -1;
   }
 
-  /* Physical dynamic press feedback */
   .category-chip:active:not(.active):not(.category-chip-active) {
-    transform: scale(0.95) translateY(0) !important;
+    transform: scale(0.96) translateY(0) !important;
   }
 
-  /* Hover States — Oracle View (Default Context) */
+  /* Hover Filters — Context Sensitive */
   .category-chip:hover:not(.active):not(.category-chip-active) {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     color: var(--oracle-light);
     background: rgba(0, 212, 255, 0.04);
-    border-color: rgba(0, 212, 255, 0.4);
-    box-shadow: 
-      0 0 20px rgba(0, 212, 255, 0.15),
-      0 10px 20px -10px rgba(0, 0, 0, 0.7),
-      inset 0 1px 0 rgba(0, 212, 255, 0.2);
+    border-color: rgba(0, 212, 255, 0.35);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.12), 0 8px 16px -6px rgba(0, 0, 0, 0.6);
   }
 
-  /* Hover States — Rawi Gold View */
   [data-tool="rawi"] .category-chip:hover:not(.active):not(.category-chip-active) {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     color: #f0c870;
     background: rgba(212, 168, 67, 0.04);
-    border-color: rgba(212, 168, 67, 0.4);
-    box-shadow: 
-      0 0 20px rgba(212, 168, 67, 0.15),
-      0 10px 20px -10px rgba(0, 0, 0, 0.7),
-      inset 0 1px 0 rgba(212, 168, 67, 0.2);
+    border-color: rgba(212, 168, 67, 0.35);
+    box-shadow: 0 0 20px rgba(212, 168, 67, 0.12), 0 8px 16px -6px rgba(0, 0, 0, 0.6);
   }
 
-  /* Hover States — Spark Purple View */
   [data-tool="spark"] .category-chip:hover:not(.active):not(.category-chip-active) {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     color: #c084fc;
     background: rgba(139, 92, 246, 0.04);
-    border-color: rgba(139, 92, 246, 0.4);
-    box-shadow: 
-      0 0 20px rgba(139, 92, 246, 0.15),
-      0 10px 20px -10px rgba(0, 0, 0, 0.7),
-      inset 0 1px 0 rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.35);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.12), 0 8px 16px -6px rgba(0, 0, 0, 0.6);
   }
 
-  /* Active State Universal Locking Mechanics */
+  /* Active State Engine */
   .category-chip.active,
   .category-chip.category-chip-active {
     transform: none !important;
     cursor: default;
     font-weight: 600;
-    letter-spacing: 0.02em;
     pointer-events: auto;
   }
 
-  /* Active — Oracle Solid Indicator Glow */
   .category-chip.active,
   .category-chip.category-chip-active {
     color: #ffffff !important;
-    background: radial-gradient(100% 100% at 50% 0%, rgba(0, 212, 255, 0.15) 0%, rgba(0, 212, 255, 0.03) 100%) !important;
+    background: radial-gradient(100% 100% at 50% 0%, rgba(0, 212, 255, 0.16) 0%, rgba(0, 212, 255, 0.02) 100%) !important;
     border-color: var(--oracle) !important;
-    box-shadow: 
-      0 0 25px rgba(0, 212, 255, 0.25),
-      inset 0 0 12px rgba(0, 212, 255, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 0 24px rgba(0, 212, 255, 0.2), inset 0 0 8px rgba(0, 212, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
   }
 
-  /* Active — Rawi Solid Indicator Glow */
   [data-tool="rawi"] .category-chip.active,
   [data-tool="rawi"] .category-chip.category-chip-active {
     color: #ffffff !important;
-    background: radial-gradient(100% 100% at 50% 0%, rgba(212, 168, 67, 0.15) 0%, rgba(212, 168, 67, 0.03) 100%) !important;
+    background: radial-gradient(100% 100% at 50% 0%, rgba(212, 168, 67, 0.16) 0%, rgba(212, 168, 67, 0.02) 100%) !important;
     border-color: var(--rawi) !important;
-    box-shadow: 
-      0 0 25px rgba(212, 168, 67, 0.25),
-      inset 0 0 12px rgba(212, 168, 67, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 0 24px rgba(212, 168, 67, 0.2), inset 0 0 8px rgba(212, 168, 67, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
   }
 
-  /* Active — Spark Solid Indicator Glow */
   [data-tool="spark"] .category-chip.active,
   [data-tool="spark"] .category-chip.category-chip-active {
     color: #ffffff !important;
-    background: radial-gradient(100% 100% at 50% 0%, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.03) 100%) !important;
+    background: radial-gradient(100% 100% at 50% 0%, rgba(139, 92, 246, 0.16) 0%, rgba(139, 92, 246, 0.02) 100%) !important;
     border-color: var(--spark) !important;
-    box-shadow: 
-      0 0 25px rgba(139, 92, 246, 0.25),
-      inset 0 0 12px rgba(139, 92, 246, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.2), inset 0 0 8px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
   }
 
-  /* ───────────────────────────────────────────────
-     THE GLOBAL PANEL RESPONDER LAYER
-     ─────────────────────────────────────────────── */
+  /* GLOBAL CONTAINER WORKSPACE RESPONDER */
   .curriculum-view-container {
-    transition: background-image 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.6s ease;
+    transition: background-image 0.8s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.8s ease;
   }
   .curriculum-view-container[data-active-tool="oracle"] { background-image: var(--gradient-mesh-oracle); }
   .curriculum-view-container[data-active-tool="rawi"] { background-image: var(--gradient-mesh-rawi); }
   .curriculum-view-container[data-active-tool="spark"] { background-image: var(--gradient-mesh-spark); }
 
-  /* TEXT GRADIENTS */
   .text-gradient-oracle {
     background: var(--gradient-oracle);
     -webkit-background-clip: text;
@@ -346,7 +307,6 @@
     color: transparent;
   }
 
-  /* ANIMATIONS */
   .animate-scan {
     position: relative;
     overflow: hidden;
@@ -364,40 +324,26 @@
 }
 
 @keyframes scan-horizontal {
-  0% {
-    top: -2px;
-  }
-  100% {
-    top: 100%;
-  }
+  0% { top: -2px; }
+  100% { top: 100%; }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(0, 212, 255, 0.06) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 212, 255, 0.05) 50%, transparent 100%);
   background-size: 200% 100%;
-  animation: shimmer 2s linear infinite;
+  animation: shimmer 2.5s linear infinite;
 }
 
 @keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-up {
-  animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
