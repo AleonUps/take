@@ -358,12 +358,79 @@
     border: 1px solid rgba(139, 92, 246, 0.12);
   }
 
-  /* --- CURRICULUM UI FIXES FOR SELECTED CHIPS --- */
+  /* ==========================================================================
+     CURRICULUM DYNAMIC INTERACTION LAYER (HOVERS, CHIPS, & GLOBAL TRANSITIONS)
+     ========================================================================== */
+  
+  /* Shared standard curriculum category chip style */
+  .category-chip {
+    padding: 0.5rem 1.25rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.02);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Custom requested hover mechanics */
+  .category-chip:hover {
+    transform: translateY(-2px);
+    background-color: rgba(0, 212, 255, 0.08);
+    border-color: rgba(0, 212, 255, 0.4);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.15);
+  }
+
+  /* Tool context variants for distinct aesthetic modes */
+  [data-tool="rawi"] .category-chip:hover {
+    background-color: rgba(212, 168, 67, 0.08);
+    border-color: rgba(212, 168, 67, 0.4);
+    box-shadow: 0 4px 12px rgba(212, 168, 67, 0.15);
+  }
+
+  [data-tool="spark"] .category-chip:hover {
+    background-color: rgba(139, 92, 246, 0.08);
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+  }
+
+  /* Micro-click interaction */
+  .category-chip:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  /* Dynamic Active states matching the chosen Tool System */
+  .category-chip.active, 
   .category-chip-active {
+    background-color: rgba(0, 212, 255, 0.06) !important;
+    border-color: var(--oracle) !important;
+    color: var(--oracle) !important;
+    box-shadow: 0 0 16px rgba(0, 212, 255, 0.25);
+  }
+
+  [data-tool="rawi"] .category-chip.active,
+  [data-tool="rawi"] .category-chip-active {
+    background-color: rgba(212, 168, 67, 0.06) !important;
     border-color: var(--rawi) !important;
     color: var(--rawi) !important;
-    background: rgba(212, 168, 67, 0.05);
-    box-shadow: 0 0 15px rgba(212, 168, 67, 0.15);
+    box-shadow: 0 0 16px rgba(212, 168, 67, 0.25);
+  }
+
+  [data-tool="spark"] .category-chip.active,
+  [data-tool="spark"] .category-chip-active {
+    background-color: rgba(139, 92, 246, 0.06) !important;
+    border-color: var(--spark) !important;
+    color: var(--spark) !important;
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.25);
+  }
+
+  /* Background Transitions for smooth swapping of content panels */
+  .curriculum-view-container {
+    transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
   }
 }
 
