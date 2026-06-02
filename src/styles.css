@@ -101,7 +101,7 @@
 }
 
 @layer components {
-  /* PREMIUM APP CHASSIS GLASS */
+  /* GLASS BOARDS */
   .glass {
     background: rgba(6, 12, 20, 0.65);
     backdrop-filter: blur(20px);
@@ -116,7 +116,7 @@
     border: 1px solid rgba(208, 228, 240, 0.08);
   }
 
-  /* PERSISTENT DYNAMIC SPACE HOVER GRIDS */
+  /* PERSISTENT SPACE HOVER GRIDS */
   .tech-grid {
     background-image: linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
@@ -196,9 +196,7 @@
     box-shadow: 0 0 40px rgba(0, 212, 255, 0.5), 0 12px 24px -8px rgba(0, 212, 255, 0.4);
   }
 
-  /* ───────────────────────────────────────────────
-     HIGH-TIER CATEGORY INTERACTION MODULES
-     ─────────────────────────────────────────────── */
+  /* CATEGORY INTERACTION CHIPS */
   .category-chip {
     @apply flex items-center justify-center px-5 py-2 rounded-full cursor-pointer select-none;
     background: radial-gradient(100% 100% at 50% 0%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
@@ -234,7 +232,7 @@
     transform: scale(0.96) translateY(0) !important;
   }
 
-  /* Hover Filters — Context Sensitive */
+  /* Hover Filters — Dynamic Tool Handlers */
   .category-chip:hover:not(.active):not(.category-chip-active) {
     transform: translateY(-2px);
     color: var(--oracle-light);
@@ -259,7 +257,7 @@
     box-shadow: 0 0 20px rgba(139, 92, 246, 0.12), 0 8px 16px -6px rgba(0, 0, 0, 0.6);
   }
 
-  /* Active State Engine */
+  /* Active Engine Overrides */
   .category-chip.active,
   .category-chip.category-chip-active {
     transform: none !important;
@@ -292,7 +290,7 @@
     box-shadow: 0 0 24px rgba(139, 92, 246, 0.2), inset 0 0 8px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
   }
 
-  /* GLOBAL CONTAINER WORKSPACE RESPONDER */
+  /* WORKSPACE CONTAINER RESPONDER */
   .curriculum-view-container {
     transition: background-image 0.8s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.8s ease;
   }
@@ -300,6 +298,7 @@
   .curriculum-view-container[data-active-tool="rawi"] { background-image: var(--gradient-mesh-rawi); }
   .curriculum-view-container[data-active-tool="spark"] { background-image: var(--gradient-mesh-spark); }
 
+  /* TEXT GRADIENTS */
   .text-gradient-oracle {
     background: var(--gradient-oracle);
     -webkit-background-clip: text;
@@ -307,6 +306,7 @@
     color: transparent;
   }
 
+  /* SCAN ANIMATIONS */
   .animate-scan {
     position: relative;
     overflow: hidden;
