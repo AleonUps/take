@@ -1,6 +1,18 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from 'react';
 
-export type CurriculumEntry = {
+export interface CurriculumTopic {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+export interface CurriculumSubject {
+  subject: string;
+  color: string;
+  topics: CurriculumTopic[];
+}
+
+export interface CurriculumEntry {
   id: string;
   career: string;
   learningStyle: string;
@@ -13,19 +25,11 @@ export type CurriculumEntry = {
   gaps: string[];
   curriculum: CurriculumSubject[];
   createdAt: number;
-};
-export type CurriculumSubject = {
-  subject: string;
-  color: string;
-  topics: CurriculumTopic[];
-};
-export type CurriculumTopic = {
-  id: string;
-  title: string;
-  completed: boolean;
-};
-export type OracleProfile = {
+}
+
+export interface OracleProfile {
   career: string;
+  careerCategory: string;
   learningStyle: string;
   country: string;
   countryCode: string;
@@ -36,104 +40,77 @@ export type OracleProfile = {
   strengths: string[];
   gaps: string[];
   curriculum: CurriculumSubject[];
-};
-export type YouTubeVideo = {
-  id: string;
-  title: string;
-  thumbnail: string;
-  duration: string;
-  channelTitle: string;
-  url: string;
-};
-export type FreeCourse = {
-  title: string;
-  platform: string;
-  url: string;
-  description: string;
-};
-const KEY_CURRICULUM = "educis_curriculum";
-const KEY_ORACLE = "educis_oracle_profile";
-const EVT = "educis-curriculum-update";
-function readCurriculum(): CurriculumEntry | null {
-  if (typeof window === "undefined") return null;
+}
+
+const CURRICULUM_KEY = 'educis_curriculum';
+const PROFILE_KEY = 'educis_oracle_profile';
+
+export function saveCurriculum(entry: CurriculumEntry): void {
   try {
-    const raw = localStorage.getItem(KEY_CURRICULUM);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    localStorage.setItem(CURRICULUM_KEY, JSON.stringify(entry));
+    window.dispatchEvent(new Event('educis-curriculum-update'));
+  } catch {}
+}
+
+export function getCurriculum(): CurriculumEntry | null {
+  try {
+    const raw = localStorage.getItem(CURRICULUM_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
-function writeCurriculum(entry: CurriculumEntry) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(KEY_CURRICULUM, JSON.stringify(entry));
-    window.dispatchEvent(new Event(EVT));
-  } catch (e) {
-    console.error("Curriculum save failed", e);
-  }
-}
-export function saveCurriculum(entry: CurriculumEntry) {
-  writeCurriculum(entry);
-}
-export function getCurriculum(): CurriculumEntry | null {
-  return readCurriculum();
-}
+
 export function toggleTopicComplete(curriculumId: string, topicId: string): boolean {
-  const entry = readCurriculum();
-  if (!entry) return false;
-  for (const subj of entry.curriculum) {
-    for (const topic of subj.topics) {
-      if (topic.id === topicId) {
-        topic.completed = !topic.completed;
-        writeCurriculum(entry);
-        return topic.completed;
+  const entry = getCurriculum();
+  if (!entry || entry.id !== curriculumId) return false;
+  let newState = false;
+  entry.curriculum = entry.curriculum.map(s => ({
+    ...s,
+    topics: s.topics.map(t => {
+      if (t.id === topicId) {
+        newState = !t.completed;
+        return { ...t, completed: newState };
       }
-    }
-  }
-  return false;
+      return t;
+    }),
+  }));
+  saveCurriculum(entry);
+  return newState;
 }
+
 export function getCurriculumProgress(): { total: number; completed: number } {
-  const entry = readCurriculum();
+  const entry = getCurriculum();
   if (!entry) return { total: 0, completed: 0 };
-  let total = 0;
-  let completed = 0;
-  for (const subj of entry.curriculum) {
-    for (const topic of subj.topics) {
-      total++;
-      if (topic.completed) completed++;
-    }
-  }
+  let total = 0, completed = 0;
+  entry.curriculum.forEach(s => s.topics.forEach(t => {
+    total++;
+    if (t.completed) completed++;
+  }));
   return { total, completed };
 }
+
 export function useCurriculum() {
-  const [entry, setEntry] = useState<CurriculumEntry | null>(() => readCurriculum());
+  const [curriculum, setCurriculum] = useState<CurriculumEntry | null>(getCurriculum);
   useEffect(() => {
-    const sync = () => setEntry(readCurriculum());
-    window.addEventListener(EVT, sync);
-    window.addEventListener("storage", sync);
+    const sync = () => setCurriculum(getCurriculum());
+    window.addEventListener('educis-curriculum-update', sync);
+    window.addEventListener('storage', sync);
     return () => {
-      window.removeEventListener(EVT, sync);
-      window.removeEventListener("storage", sync);
+      window.removeEventListener('educis-curriculum-update', sync);
+      window.removeEventListener('storage', sync);
     };
   }, []);
-  return entry;
+  return curriculum;
 }
-export function saveOracleProfile(profile: OracleProfile) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(KEY_ORACLE, JSON.stringify(profile));
-  } catch (e) {
-    console.error("Oracle profile save failed", e);
-  }
+
+export function saveOracleProfile(profile: OracleProfile): void {
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch {}
 }
+
 export function getOracleProfile(): OracleProfile | null {
-  if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(KEY_ORACLE);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+    const raw = localStorage.getItem(PROFILE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
 }
