@@ -1,294 +1,731 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useMutation } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
-import { Upload, Camera, X, Sparkles, RefreshCw, ChevronDown, Eye } from "lucide-react";
-import { sparkAnalyze, type SparkResult } from "@/lib/spark.functions";
-import { LANGUAGES, GRADES, SUBJECTS } from "@/lib/educis";
-import { SparkResultView } from "@/components/spark-result-view";
-import { getCurriculum } from "@/lib/curriculum";
+import { createFileRoute } from '@tanstack/react-router';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Camera, Upload, X, Zap, BookOpen, Globe, ChevronDown, Layers, Star, BookMarked, Check, AlertCircle } from 'lucide-react';
+import { LANGUAGES, GRADES } from '@/lib/educis';
+import { saveToLibrary } from '@/lib/library';
+import { useTheme } from '@/lib/theme';
 
-export const Route = createFileRoute("/spark")({
-  head: () => ({
-    meta: [
-      { title: "SPARK — Point at anything, learn everything · EDUCIS" },
-      { name: "description", content: "Upload a photo of anything and SPARK generates lessons across multiple subjects." },
-    ],
-  }),
+export const Route = createFileRoute('/spark')({
   component: SparkPage,
 });
 
-function SparkPage() {
-  const sparkFn = useServerFn(sparkAnalyze);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [mimeType, setMimeType] = useState("image/jpeg");
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [thumbnailDataUrl, setThumbnailDataUrl] = useState<string | null>(null);
-  const [grade, setGrade] = useState<"elementary" | "middle" | "high">("middle");
-  const [lang, setLang] = useState("en");
-  const [depth, setDepth] = useState(2);
-  const [focus, setFocus] = useState<string[]>([]);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const langInfo = LANGUAGES.find((l) => l.code === lang)!;
-  const [careerContext, setCareerContext] = useState<string | null>(null);
-  const [curriculumSubjects, setCurriculumSubjects] = useState<string[]>([]);
+const SAMPLE_IMAGES = [
+  { url: 'https://images.pexels.com/photos/3735218/pexels-photo-3735218.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Solar panels', subjects: 3 },
+  { url: 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Leaf & photosynthesis', subjects: 4 },
+  { url: 'https://images.pexels.com/photos/3735201/pexels-photo-3735201.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'City bridge', subjects: 5 },
+  { url: 'https://images.pexels.com/photos/414171/pexels-photo-414171.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Mountain ecosystem', subjects: 4 },
+  { url: 'https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'Market economy', subjects: 3 },
+  { url: 'https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg?auto=compress&cs=tinysrgb&w=600', label: 'River delta', subjects: 5 },
+];
+
+const TERMINAL_LOGS = [
+  'BOOT_SEQUENCE // INITIALIZING_SPARK_ENGINE',
+  'IMAGE_PROC // SCANNING_VISUAL_DATA_STREAMS',
+  'SUBJECT_MAP // CROSS_REFERENCING_CURRICULUM',
+  'CONTEXT_LAYER // LOCALIZING_CULTURAL_FRAME',
+  'LESSON_GEN // COMPILING_MULTI_SUBJECT_NODES',
+  'SYS_STATUS // RESOLVING_AMBIGUITY_PATHWAYS... SUCCESS',
+];
+
+interface SparkResult {
+  objectName: string;
+  description: string;
+  subjects: Array<{
+    subject: string;
+    lessonTitle: string;
+    hook: string;
+    keyPoints: string[];
+    activityPrompt: string;
+    vocabularyTerms: string[];
+    discussionQuestion: string;
+  }>;
+}
+
+function TerminalLoader({ onDone }: { onDone: () => void }) {
+  const [count, setCount] = useState(0);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [cursorBlink, setCursorBlink] = useState(true);
+  const { isDark } = useTheme();
 
   useEffect(() => {
-    const c = getCurriculum();
-    if (c) {
-      setCareerContext(c.career);
-      setCurriculumSubjects(c.curriculum.map((s) => s.subject));
-      if (c.curriculum.length > 0) setFocus(c.curriculum.slice(0, 3).map((s) => s.subject));
-      const lm = LANGUAGES.find((l) => l.code === c.language);
-      if (lm) setLang(c.language);
-      setGrade(c.grade as typeof grade);
-    }
-  }, []);
+    const start = performance.now();
+    const duration = 3200;
 
-  const mutation = useMutation<SparkResult>({
-    mutationFn: async () => {
-      if (!imageBase64) throw new Error("Upload a photo first.");
-      return (await sparkFn({ data: { imageBase64, mimeType, grade, language: lang, languageName: langInfo.name, depth, focusSubjects: focus.length ? focus : undefined } })) as SparkResult;
-    },
-  });
+    const animate = (now: number) => {
+      const elapsed = now - start;
+      const t = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 2.5);
+      const current = Math.floor(eased * 100);
+      setCount(current);
 
-  const handleFile = (file: File) => {
-    if (file.size > 8 * 1024 * 1024) { alert("Please use an image under 8MB."); return; }
-    setMimeType(file.type || "image/jpeg");
-    setPreviewUrl(URL.createObjectURL(file));
-    const r = new FileReader();
-    r.onload = () => { const d = r.result as string; setImageBase64(d.split(",")[1] ?? ""); setThumbnailDataUrl(d); };
-    r.readAsDataURL(file);
-  };
+      const logIndex = Math.floor(t * TERMINAL_LOGS.length);
+      setLogs(TERMINAL_LOGS.slice(0, logIndex + 1));
 
-  const reset = () => { setImageBase64(null); setPreviewUrl(null); setThumbnailDataUrl(null); mutation.reset(); };
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setCount(100);
+        setLogs(TERMINAL_LOGS);
+        setTimeout(onDone, 400);
+      }
+    };
+    requestAnimationFrame(animate);
+
+    const blinkInterval = setInterval(() => setCursorBlink(b => !b), 530);
+    return () => clearInterval(blinkInterval);
+  }, [onDone]);
+
+  const countStr = String(count).padStart(3, '0');
 
   return (
-    <div className="relative min-h-screen" style={{ background: "var(--background)" }} data-tool="spark">
-      <div className="pointer-events-none absolute inset-0 tech-grid" />
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute right-0 top-0 h-96 w-96" style={{ background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)" }} />
-        <div className="absolute left-0 bottom-0 h-64 w-64" style={{ background: "radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)" }} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: isDark ? 'rgba(2,4,8,0.97)' : 'rgba(248,250,252,0.97)', backdropFilter: 'blur(20px)' }}>
+      <div className="w-full max-w-md px-6">
+        {/* macOS-style dots */}
+        <div className="flex gap-2 mb-6">
+          {['#ff5f57', '#ffbd2e', '#28ca41'].map((c, i) => (
+            <div key={i} className="h-3 w-3 rounded-full" style={{ background: c }} />
+          ))}
+        </div>
+
+        {/* Big counter */}
+        <div className="mb-6">
+          <div className="font-mono text-7xl font-black tabular-nums leading-none"
+            style={{ color: 'var(--spark)', textShadow: '0 0 40px rgba(139,92,246,0.5)', fontFamily: 'JetBrains Mono, monospace' }}>
+            {countStr}%
+          </div>
+          <div className="mt-2 h-1 w-full rounded-full overflow-hidden" style={{ background: 'rgba(139,92,246,0.1)' }}>
+            <div className="h-full rounded-full transition-none"
+              style={{ width: `${count}%`, background: 'linear-gradient(90deg, rgba(139,92,246,0.5), var(--spark))' }} />
+          </div>
+        </div>
+
+        {/* Terminal log */}
+        <div className="space-y-1.5">
+          {logs.map((line, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="font-mono text-[10px]" style={{ color: 'rgba(139,92,246,0.4)' }}>{'>'}</span>
+              <span className={`font-mono text-[11px] ${i === logs.length - 1 ? 'animate-pulse' : ''}`}
+                style={{ color: i === logs.length - 1 ? 'var(--spark)' : 'var(--muted-foreground)', opacity: i === logs.length - 1 ? 1 : 0.5 }}>
+                {line}
+                {i === logs.length - 1 && (
+                  <span style={{ opacity: cursorBlink ? 1 : 0 }}>_</span>
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="relative mx-auto grid max-w-7xl gap-6 px-4 py-10 lg:grid-cols-[360px_1fr]">
+function SubjectCard({ subject, isDark }: { subject: SparkResult['subjects'][number]; isDark: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const [vocabOpen, setVocabOpen] = useState(false);
 
-        {/* PANEL */}
-        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+  const subjectColors: Record<string, string> = {
+    Mathematics: '#00d4ff', Chemistry: '#8b5cf6', Biology: '#00ff88',
+    Physics: '#fbbf24', History: '#d4a843', Geography: '#22d3ee',
+    Economics: '#f97316', Ethics: '#e879f9', 'Environmental Science': '#86efac',
+    'Social Studies': '#fb923c', 'Media Literacy': '#a78bfa', 'Cultural Studies': '#f43f5e',
+  };
+  const color = subjectColors[subject.subject] ?? '#8b5cf6';
 
-          {/* Header */}
-          <div className="hud-card hud-card-spark rounded-xl p-6" style={{ background: "rgba(6,12,20,0.9)", border: "1px solid rgba(139,92,246,0.15)" }}>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="grid h-10 w-10 place-items-center rounded-lg" style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)" }}>
-                <Sparkles className="h-5 w-5" style={{ color: "var(--spark)" }} />
+  return (
+    <div className="hud-card rounded-xl overflow-hidden transition-all duration-300"
+      style={{ borderColor: `${color}30`, background: isDark ? 'rgba(6,12,20,0.8)' : 'rgba(248,250,252,0.9)' }}>
+      <button
+        className="w-full text-left p-5 flex items-start justify-between gap-4"
+        onClick={() => setExpanded(e => !e)}>
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="h-8 w-8 rounded-lg flex-shrink-0 grid place-items-center"
+            style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
+            <Layers className="h-4 w-4" style={{ color }} />
+          </div>
+          <div className="min-w-0">
+            <div className="font-mono text-[10px] tracking-widest font-bold mb-0.5" style={{ color }}>
+              // {subject.subject.toUpperCase()}
+            </div>
+            <div className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>
+              {subject.lessonTitle}
+            </div>
+          </div>
+        </div>
+        <ChevronDown className="h-4 w-4 flex-shrink-0 transition-transform duration-300 mt-1"
+          style={{ color: 'var(--muted-foreground)', transform: expanded ? 'rotate(180deg)' : 'none' }} />
+      </button>
+
+      {expanded && (
+        <div className="px-5 pb-5 space-y-4 border-t" style={{ borderColor: `${color}15` }}>
+          {/* Hook */}
+          <div className="mt-4 p-3 rounded-lg" style={{ background: `${color}08`, borderLeft: `3px solid ${color}` }}>
+            <p className="text-sm italic leading-relaxed" style={{ color: 'var(--foreground)', opacity: 0.85 }}>
+              "{subject.hook}"
+            </p>
+          </div>
+
+          {/* Key points */}
+          <div>
+            <p className="font-mono text-[9px] tracking-widest mb-2" style={{ color, opacity: 0.7 }}>// KEY_CONCEPTS</p>
+            <ul className="space-y-1.5">
+              {subject.keyPoints.map((pt, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--foreground)', opacity: 0.8 }}>
+                  <span className="h-1.5 w-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />
+                  {pt}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Activity */}
+          <div className="p-3 rounded-lg" style={{ background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.04)', border: '1px solid var(--border)' }}>
+            <p className="font-mono text-[9px] tracking-widest mb-1.5" style={{ color: 'var(--muted-foreground)' }}>// ACTIVITY_PROMPT</p>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--foreground)', opacity: 0.8 }}>{subject.activityPrompt}</p>
+          </div>
+
+          {/* Vocabulary */}
+          <div>
+            <button
+              className="flex items-center gap-2 font-mono text-[9px] tracking-widest mb-2 transition-opacity hover:opacity-100"
+              style={{ color, opacity: 0.7 }}
+              onClick={() => setVocabOpen(v => !v)}>
+              // VOCABULARY_TERMS
+              <ChevronDown className="h-3 w-3 transition-transform" style={{ transform: vocabOpen ? 'rotate(180deg)' : 'none' }} />
+            </button>
+            {vocabOpen && (
+              <div className="flex flex-wrap gap-1.5">
+                {subject.vocabularyTerms.map((term, i) => (
+                  <span key={i} className="rounded-full px-2.5 py-0.5 text-[10px] font-mono"
+                    style={{ background: `${color}10`, border: `1px solid ${color}25`, color }}>
+                    {term}
+                  </span>
+                ))}
               </div>
+            )}
+          </div>
+
+          {/* Discussion question */}
+          <div className="p-3 rounded-lg border" style={{ borderColor: `${color}20`, background: `${color}05` }}>
+            <p className="font-mono text-[9px] tracking-widest mb-1" style={{ color, opacity: 0.7 }}>// DISCUSSION_QUESTION</p>
+            <p className="text-sm" style={{ color: 'var(--foreground)', opacity: 0.75 }}>{subject.discussionQuestion}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function getDemoResult(grade: string, language: string): SparkResult {
+  const gradeLabel = GRADES.find(g => g.id === grade)?.label ?? 'Middle School';
+  const langName = LANGUAGES.find(l => l.code === language)?.name ?? 'English';
+
+  return {
+    objectName: 'Solar Panel Array',
+    description: `A solar panel array converts sunlight into electrical energy using photovoltaic cells. This image was analyzed for ${gradeLabel} students in ${langName}, revealing rich cross-disciplinary connections spanning physics, environmental science, economics, and social equity.`,
+    subjects: [
+      {
+        subject: 'Physics',
+        lessonTitle: 'The Photoelectric Effect',
+        hook: 'Every photon of sunlight carries energy — enough to knock an electron free and power your home.',
+        keyPoints: [
+          'Photons carry energy proportional to their frequency',
+          'Semiconductor p-n junctions create one-way current flow',
+          'Voltage × Current = Power (in Watts)',
+          'Efficiency losses occur from heat and reflection',
+        ],
+        activityPrompt: 'Calculate how many solar panels of 400W each would power a home that uses 900 kWh per month, assuming 5 peak sun-hours per day.',
+        vocabularyTerms: ['photon', 'photoelectric effect', 'semiconductor', 'photovoltaic', 'electron volt'],
+        discussionQuestion: 'Why does a solar panel produce less power on a hot sunny day than a cool sunny day?',
+      },
+      {
+        subject: 'Environmental Science',
+        lessonTitle: 'Clean Energy vs. Land Use',
+        hook: 'Solar is clean — but vast farms displace ecosystems. Is there a perfect energy source?',
+        keyPoints: [
+          'Solar produces zero operational carbon emissions',
+          'Panel manufacturing has upstream carbon costs',
+          'Large solar farms can disrupt local habitat',
+          'Rooftop solar avoids land-use conflicts',
+        ],
+        activityPrompt: 'Research a solar farm near a populated area. Map the tradeoffs: energy output, land displaced, wildlife corridors affected.',
+        vocabularyTerms: ['carbon footprint', 'lifecycle assessment', 'habitat fragmentation', 'renewable energy', 'net zero'],
+        discussionQuestion: 'Should governments prioritize large solar farms in deserts or rooftop installations in cities? Defend your answer.',
+      },
+      {
+        subject: 'Economics',
+        lessonTitle: 'The Economics of Energy Transition',
+        hook: 'Solar is now the cheapest electricity in history — yet billions still lack power. Why?',
+        keyPoints: [
+          'Levelized Cost of Energy (LCOE) has dropped 90% since 2010',
+          'Grid infrastructure requires massive capital investment',
+          'Energy poverty disproportionately affects developing regions',
+          'Subsidies and carbon taxes shape market competitiveness',
+        ],
+        activityPrompt: 'Create a cost-benefit analysis comparing solar installation versus continued fossil fuel use over 20 years for a small rural school.',
+        vocabularyTerms: ['LCOE', 'capital expenditure', 'subsidy', 'market externality', 'grid parity'],
+        discussionQuestion: 'Who should pay for the global energy transition — wealthy nations, corporations, or individuals?',
+      },
+    ],
+  };
+}
+
+async function analyzeImage(
+  imageBase64: string | null,
+  imageUrl: string | null,
+  grade: string,
+  language: string,
+  depth: string,
+  focus: string,
+): Promise<SparkResult> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder')) {
+    await new Promise(r => setTimeout(r, 3200));
+    return getDemoResult(grade, language);
+  }
+
+  try {
+    const resp = await fetch(`${supabaseUrl}/functions/v1/spark-analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify({ imageBase64, imageUrl, grade, language, depth, focus }),
+    });
+    if (!resp.ok) throw new Error('edge function error');
+    return await resp.json();
+  } catch {
+    return getDemoResult(grade, language);
+  }
+}
+
+function SparkPage() {
+  const { isDark } = useTheme();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [grade, setGrade] = useState('middle');
+  const [language, setLanguage] = useState('en');
+  const [depth, setDepth] = useState<'brief' | 'standard' | 'deep'>('standard');
+  const [focus, setFocus] = useState<'all' | 'stem' | 'humanities' | 'social'>('all');
+
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<SparkResult | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFile = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file.');
+      return;
+    }
+    setImageFile(file);
+    setImageUrl(null);
+    setResult(null);
+    setSavedId(null);
+    const reader = new FileReader();
+    reader.onload = e => setImagePreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
+  const handleSampleClick = (url: string) => {
+    setImageUrl(url);
+    setImagePreview(url);
+    setImageFile(null);
+    setResult(null);
+    setSavedId(null);
+  };
+
+  const handleAnalyze = async () => {
+    if (!imagePreview && !imageUrl) {
+      setError('Please select or upload an image first.');
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    setResult(null);
+    setSavedId(null);
+    try {
+      const base64 = imageFile ? imagePreview : null;
+      const res = await analyzeImage(base64, imageUrl ?? null, grade, language, depth, focus);
+      setResult(res);
+    } catch {
+      setError('Analysis failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = () => {
+    if (!result) return;
+    const id = saveToLibrary({
+      kind: 'spark',
+      thumbnail: imagePreview,
+      grade,
+      language,
+      result: {
+        objectName: result.objectName,
+        description: result.description,
+        subjects: result.subjects.map(s => ({ subject: s.subject, lessonTitle: s.lessonTitle })),
+      },
+    });
+    setSavedId(id);
+  };
+
+  const hasImage = !!(imagePreview || imageUrl);
+
+  return (
+    <>
+      {loading && <TerminalLoader onDone={() => setLoading(false)} />}
+
+      <div className="min-h-screen tech-grid" style={{ background: 'var(--background)' }}>
+        {/* Hero */}
+        <section className="relative border-b overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 right-0 h-64 w-64 rounded-full opacity-10 blur-3xl"
+              style={{ background: 'var(--spark)' }} />
+          </div>
+          <div className="mx-auto max-w-7xl px-6 py-16">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
               <div>
-                <h2 className="text-lg font-bold" style={{ color: "var(--spark)", fontFamily: "var(--font-display)" }}>SPARK</h2>
-                <p className="text-xs" style={{ color: "rgba(208,228,240,0.3)", fontFamily: "var(--font-mono)" }}>// point_at_anything</p>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-mono tracking-widest"
+                  style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--spark)' }}>
+                  <Camera className="h-3 w-3" />
+                  SPARK // VISUAL_INTELLIGENCE_GATEWAY
+                </div>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-3"
+                  style={{ fontFamily: 'Syne, sans-serif', color: 'var(--foreground)' }}>
+                  Point. Capture.{' '}
+                  <span style={{ color: 'var(--spark)' }}>Learn.</span>
+                </h1>
+                <p className="text-lg max-w-xl" style={{ color: 'var(--muted-foreground)' }}>
+                  Upload any image and SPARK extracts multi-subject lessons from what you see — physics, history, economics, and more from a single photograph.
+                </p>
+              </div>
+              <div className="flex items-center gap-4 flex-shrink-0">
+                {[{ v: result?.subjects.length ?? 0, l: 'subjects found' }, { v: 3, l: 'depth levels' }, { v: 12, l: 'disciplines' }].map(({ v, l }, i) => (
+                  <div key={i} className="text-center">
+                    <div className="text-2xl font-black tabular-nums" style={{ color: 'var(--spark)', fontFamily: 'Syne, sans-serif' }}>{v}</div>
+                    <div className="text-[10px] font-mono" style={{ color: 'var(--muted-foreground)' }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Main layout */}
+        <div className="mx-auto max-w-7xl px-6 py-10 grid gap-8 lg:grid-cols-[380px_1fr]">
+          {/* Left sidebar */}
+          <aside className="space-y-5">
+            {/* Upload card */}
+            <div className="hud-card hud-card-spark rounded-xl p-5 space-y-4"
+              style={{ background: isDark ? 'rgba(6,12,20,0.8)' : 'rgba(248,250,252,0.9)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <Camera className="h-4 w-4" style={{ color: 'var(--spark)' }} />
+                <span className="font-mono text-[10px] tracking-widest font-bold" style={{ color: 'var(--spark)' }}>
+                  // IMAGE_INPUT
+                </span>
+              </div>
+
+              {/* Drop zone */}
+              <div
+                className={`relative rounded-lg border-2 border-dashed cursor-pointer transition-all duration-200 overflow-hidden
+                  ${hasImage ? 'border-transparent p-0' : 'p-8 text-center hover:border-opacity-60'}`}
+                style={{ borderColor: hasImage ? 'transparent' : 'rgba(139,92,246,0.3)', minHeight: hasImage ? 200 : undefined }}
+                onDrop={handleDrop}
+                onDragOver={e => e.preventDefault()}
+                onClick={() => !hasImage && fileInputRef.current?.click()}>
+                {hasImage ? (
+                  <div className="relative group scan-on-hover">
+                    <img src={imagePreview ?? imageUrl ?? ''} alt="Upload preview"
+                      className="w-full object-cover rounded-lg" style={{ maxHeight: 260 }} />
+                    <button
+                      className="absolute top-2 right-2 rounded-full p-1.5 transition-opacity opacity-0 group-hover:opacity-100"
+                      style={{ background: 'rgba(0,0,0,0.6)' }}
+                      onClick={e => { e.stopPropagation(); setImagePreview(null); setImageUrl(null); setImageFile(null); setResult(null); }}>
+                      <X className="h-3.5 w-3.5 text-white" />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <Upload className="h-8 w-8 mx-auto mb-3" style={{ color: 'rgba(139,92,246,0.4)' }} />
+                    <p className="text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>Drop image or click to upload</p>
+                    <p className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>JPG, PNG, WebP</p>
+                  </div>
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+
+              {/* Sample images */}
+              <div>
+                <p className="font-mono text-[9px] tracking-widest mb-2" style={{ color: 'var(--muted-foreground)' }}>// SAMPLE_IMAGES</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {SAMPLE_IMAGES.map((s, i) => (
+                    <button key={i} onClick={() => handleSampleClick(s.url)}
+                      className="group relative overflow-hidden rounded-md scan-on-hover"
+                      style={{ aspectRatio: '4/3' }}
+                      title={s.label}>
+                      <img src={s.url} alt={s.label} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                      <div className="absolute inset-0 flex items-end p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        style={{ background: 'linear-gradient(transparent, rgba(0,0,0,0.7))' }}>
+                        <span className="text-[9px] text-white font-mono leading-tight">{s.subjects} subjects</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {careerContext && (
-              <div className="mt-4 rounded-lg p-3" style={{ background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.12)" }}>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Eye className="h-3 w-3" style={{ color: "var(--oracle)" }} />
-                  <span className="text-xs" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.1em", color: "rgba(0,212,255,0.5)" }}>FROM::0RACLE</span>
+            {/* Config card */}
+            <div className="hud-card hud-card-spark rounded-xl p-5 space-y-4"
+              style={{ background: isDark ? 'rgba(6,12,20,0.8)' : 'rgba(248,250,252,0.9)' }}>
+              <span className="font-mono text-[10px] tracking-widest font-bold" style={{ color: 'var(--spark)' }}>
+                // ANALYSIS_PARAMETERS
+              </span>
+
+              {/* Grade */}
+              <div>
+                <label className="font-mono text-[9px] tracking-widest block mb-2" style={{ color: 'var(--muted-foreground)' }}>GRADE_LEVEL</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {GRADES.map(g => (
+                    <button key={g.id} onClick={() => setGrade(g.id)}
+                      className="rounded-lg py-2 px-1 text-[10px] font-mono font-semibold transition-all duration-200"
+                      style={{
+                        background: grade === g.id ? 'rgba(139,92,246,0.15)' : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)',
+                        border: `1px solid ${grade === g.id ? 'rgba(139,92,246,0.4)' : 'var(--border)'}`,
+                        color: grade === g.id ? 'var(--spark)' : 'var(--muted-foreground)',
+                      }}>
+                      {g.label.split(' ')[0]}
+                    </button>
+                  ))}
                 </div>
-                <p className="text-xs" style={{ color: "rgba(208,228,240,0.55)" }}>Training for <strong style={{ color: "var(--oracle)" }}>{careerContext}</strong></p>
+              </div>
+
+              {/* Language */}
+              <div>
+                <label className="font-mono text-[9px] tracking-widest block mb-2" style={{ color: 'var(--muted-foreground)' }}>OUTPUT_LANGUAGE</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {LANGUAGES.map(l => (
+                    <button key={l.code} onClick={() => setLanguage(l.code)}
+                      className="rounded-lg py-2 px-1 text-[10px] font-mono transition-all duration-200 flex items-center justify-center gap-1"
+                      style={{
+                        background: language === l.code ? 'rgba(139,92,246,0.15)' : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)',
+                        border: `1px solid ${language === l.code ? 'rgba(139,92,246,0.4)' : 'var(--border)'}`,
+                        color: language === l.code ? 'var(--spark)' : 'var(--muted-foreground)',
+                      }}>
+                      <span>{l.flag}</span>
+                      <span>{l.code.toUpperCase()}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Depth */}
+              <div>
+                <label className="font-mono text-[9px] tracking-widest block mb-2" style={{ color: 'var(--muted-foreground)' }}>ANALYSIS_DEPTH</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(['brief', 'standard', 'deep'] as const).map(d => (
+                    <button key={d} onClick={() => setDepth(d)}
+                      className="rounded-lg py-2 text-[10px] font-mono font-semibold capitalize transition-all duration-200"
+                      style={{
+                        background: depth === d ? 'rgba(139,92,246,0.15)' : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)',
+                        border: `1px solid ${depth === d ? 'rgba(139,92,246,0.4)' : 'var(--border)'}`,
+                        color: depth === d ? 'var(--spark)' : 'var(--muted-foreground)',
+                      }}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Focus */}
+              <div>
+                <label className="font-mono text-[9px] tracking-widest block mb-2" style={{ color: 'var(--muted-foreground)' }}>SUBJECT_FOCUS</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {([
+                    { id: 'all', label: 'All Subjects' },
+                    { id: 'stem', label: 'STEM' },
+                    { id: 'humanities', label: 'Humanities' },
+                    { id: 'social', label: 'Social' },
+                  ] as const).map(f => (
+                    <button key={f.id} onClick={() => setFocus(f.id)}
+                      className="rounded-lg py-2 text-[10px] font-mono transition-all duration-200"
+                      style={{
+                        background: focus === f.id ? 'rgba(139,92,246,0.15)' : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)',
+                        border: `1px solid ${focus === f.id ? 'rgba(139,92,246,0.4)' : 'var(--border)'}`,
+                        color: focus === f.id ? 'var(--spark)' : 'var(--muted-foreground)',
+                      }}>
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="flex items-center gap-2 rounded-lg p-3" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" style={{ color: '#ef4444' }} />
+                  <p className="text-xs" style={{ color: '#ef4444' }}>{error}</p>
+                </div>
+              )}
+
+              {/* Analyze button */}
+              <button
+                onClick={handleAnalyze}
+                disabled={loading || !hasImage}
+                className="btn-spark w-full flex items-center justify-center gap-2 rounded-lg py-3 font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                <Zap className="h-4 w-4" />
+                {loading ? 'Analyzing...' : 'ANALYZE IMAGE'}
+              </button>
+            </div>
+          </aside>
+
+          {/* Right content area */}
+          <main className="min-h-[400px]">
+            {!result && !loading && (
+              <div className="flex h-full min-h-[400px] flex-col items-center justify-center text-center px-8">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 rounded-full blur-2xl opacity-20" style={{ background: 'var(--spark)' }} />
+                  <div className="relative grid h-20 w-20 place-items-center rounded-2xl mx-auto"
+                    style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}>
+                    <Camera className="h-10 w-10" style={{ color: 'var(--spark)' }} />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--foreground)', fontFamily: 'Syne, sans-serif' }}>
+                  Ready for your image
+                </h2>
+                <p className="text-sm max-w-md" style={{ color: 'var(--muted-foreground)' }}>
+                  Upload a photo or pick a sample image, configure your parameters, and hit Analyze to extract multi-subject lessons from the visual world.
+                </p>
+                <div className="mt-8 grid grid-cols-3 gap-4 w-full max-w-sm">
+                  {[{ icon: '🔭', label: 'Object detected' }, { icon: '📚', label: 'Subjects mapped' }, { icon: '🌍', label: 'Culturally framed' }].map((item, i) => (
+                    <div key={i} className="rounded-xl p-3 text-center"
+                      style={{ background: isDark ? 'rgba(139,92,246,0.05)' : 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.1)' }}>
+                      <div className="text-2xl mb-1">{item.icon}</div>
+                      <div className="text-[10px] font-mono" style={{ color: 'var(--muted-foreground)' }}>{item.label}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Upload */}
-            <label onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f); }}
-              className="mt-5 block cursor-pointer rounded-xl p-5 text-center transition-all"
-              style={{ border: "2px dashed rgba(139,92,246,0.25)", background: "rgba(139,92,246,0.03)" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(139,92,246,0.5)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 0 30px rgba(139,92,246,0.15)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(139,92,246,0.25)"; (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
-            >
-              {previewUrl ? (
-                <div className="relative">
-                  <img src={previewUrl} alt="preview" className="mx-auto max-h-40 rounded-lg" />
-                  <button type="button" onClick={(e) => { e.preventDefault(); reset(); }}
-                    className="absolute -right-2 -top-2 grid h-7 w-7 place-items-center rounded-full transition-all"
-                    style={{ background: "rgba(20,20,40,0.9)", border: "1px solid rgba(139,92,246,0.3)", color: "rgba(208,228,240,0.6)" }}>
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl" style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)" }}>
-                    <Upload className="h-5 w-5" style={{ color: "var(--spark)" }} />
+            {result && (
+              <div className="space-y-6 animate-fade-in">
+                {/* Result header */}
+                <div className="hud-card hud-card-spark rounded-xl p-6"
+                  style={{ background: isDark ? 'rgba(6,12,20,0.8)' : 'rgba(248,250,252,0.9)' }}>
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-5">
+                    {imagePreview && (
+                      <div className="relative overflow-hidden rounded-xl flex-shrink-0 scan-on-hover"
+                        style={{ width: 120, height: 90 }}>
+                        <img src={imagePreview} alt="Analyzed" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                          <div className="font-mono text-[10px] tracking-widest mb-1" style={{ color: 'var(--spark)', opacity: 0.7 }}>
+                            // OBJECT_IDENTIFIED
+                          </div>
+                          <h2 className="text-2xl font-black" style={{ color: 'var(--foreground)', fontFamily: 'Syne, sans-serif' }}>
+                            {result.objectName}
+                          </h2>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleSave}
+                            disabled={!!savedId}
+                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 disabled:opacity-60"
+                            style={{
+                              background: savedId ? 'rgba(0,255,136,0.1)' : 'rgba(139,92,246,0.1)',
+                              border: `1px solid ${savedId ? 'rgba(0,255,136,0.3)' : 'rgba(139,92,246,0.3)'}`,
+                              color: savedId ? '#00ff88' : 'var(--spark)',
+                            }}>
+                            {savedId ? <Check className="h-3.5 w-3.5" /> : <BookMarked className="h-3.5 w-3.5" />}
+                            {savedId ? 'Saved' : 'Save'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                        {result.description}
+                      </p>
+
+                      {/* Subject badges */}
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {result.subjects.map((s, i) => (
+                          <span key={i} className="rounded-full px-2.5 py-0.5 text-[10px] font-mono font-semibold"
+                            style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--spark)' }}>
+                            {s.subject}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-sm font-medium" style={{ color: "rgba(208,228,240,0.6)" }}>Drag & drop or click</p>
-                  <p className="mt-1 text-xs" style={{ color: "rgba(208,228,240,0.25)", fontFamily: "var(--font-mono)" }}>PNG, JPG // max 8MB</p>
                 </div>
-              )}
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
-            </label>
 
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <button onClick={() => fileRef.current?.click()} className="rounded-lg py-2 text-xs transition-all" style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)", color: "rgba(208,228,240,0.5)" }}>
-                Choose file
-              </button>
-              <label className="cursor-pointer rounded-lg py-2 text-center text-xs transition-all" style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)", color: "rgba(208,228,240,0.5)" }}>
-                <Camera className="mr-1 inline h-3 w-3" /> Camera
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
-              </label>
-            </div>
-          </div>
-
-          {/* Settings */}
-          <div className="rounded-xl p-5 space-y-5" style={{ background: "rgba(6,12,20,0.8)", border: "1px solid rgba(139,92,246,0.08)" }}>
-            <div>
-              <p className="mb-2 text-xs" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.12em", color: "rgba(139,92,246,0.5)" }}>GRADE_LEVEL</p>
-              <div className="space-y-1.5">
-                {GRADES.map((g) => (
-                  <button key={g.id} onClick={() => setGrade(g.id as typeof grade)}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm transition-all"
-                    style={grade === g.id ? { background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)", color: "var(--spark)" } : { background: "rgba(0,0,0,0.2)", border: "1px solid rgba(139,92,246,0.06)", color: "rgba(208,228,240,0.45)" }}>
-                    <div className="font-medium">{g.label}</div>
-                    <div className="text-xs opacity-60" style={{ fontFamily: "var(--font-mono)" }}>{g.ages}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="mb-2 text-xs" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.12em", color: "rgba(139,92,246,0.5)" }}>LANGUAGE</p>
-              <div className="grid grid-cols-3 gap-1.5">
-                {LANGUAGES.map((l) => (
-                  <button key={l.code} onClick={() => setLang(l.code)}
-                    className="rounded-lg px-2 py-1.5 text-xs transition-all"
-                    style={lang === l.code ? { background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)", color: "var(--spark)" } : { background: "rgba(0,0,0,0.2)", border: "1px solid rgba(139,92,246,0.06)", color: "rgba(208,228,240,0.4)" }}>
-                    <span className="mr-1">{l.flag}</span>{l.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2">
-                <p className="text-xs" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.12em", color: "rgba(139,92,246,0.5)" }}>DEPTH</p>
-                <p className="text-xs" style={{ fontFamily: "var(--font-mono)", color: "rgba(139,92,246,0.4)" }}>{["QUICK", "BALANCED", "DEEP"][depth - 1]}</p>
-              </div>
-              <input type="range" min={1} max={3} value={depth} onChange={(e) => setDepth(Number(e.target.value))} className="w-full" style={{ accentColor: "var(--spark)" }} />
-            </div>
-
-            <details className="group">
-              <summary className="flex cursor-pointer items-center justify-between text-xs" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.12em", color: "rgba(139,92,246,0.5)" }}>
-                FOCUS_SUBJECTS {curriculumSubjects.length > 0 && <span style={{ color: "rgba(0,212,255,0.5)" }}>+{curriculumSubjects.length}_CURRICULUM</span>}
-                <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
-              </summary>
-              <div className="mt-2 grid grid-cols-2 gap-1">
-                {SUBJECTS.map((s) => {
-                  const active = focus.includes(s.name);
-                  const fromC = curriculumSubjects.includes(s.name);
-                  return (
-                    <button key={s.name} onClick={() => setFocus((p) => p.includes(s.name) ? p.filter((x) => x !== s.name) : [...p, s.name])}
-                      className="rounded-lg px-2 py-1 text-[11px] transition-all"
-                      style={active ? { background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)", color: "var(--spark)" } : fromC ? { background: "rgba(0,212,255,0.05)", border: "1px solid rgba(0,212,255,0.2)", color: "rgba(0,212,255,0.6)" } : { background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.04)", color: "rgba(208,228,240,0.35)" }}>
-                      {s.name} {fromC && <span style={{ color: "var(--oracle)" }}>*</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </details>
-          </div>
-
-          <button disabled={!imageBase64 || mutation.isPending} onClick={() => mutation.mutate()}
-            className="btn-spark w-full rounded-xl py-4 text-sm disabled:cursor-not-allowed disabled:opacity-40">
-            {mutation.isPending ? "SPARKING..." : "SPARK IT"}
-          </button>
-
-          {/* Examples */}
-          <div className="rounded-xl p-5" style={{ background: "rgba(6,12,20,0.7)", border: "1px solid rgba(139,92,246,0.06)" }}>
-            <p className="mb-3 text-xs" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.12em", color: "rgba(139,92,246,0.4)" }}>SAMPLE_IMAGES</p>
-            <div className="grid grid-cols-4 gap-2">
-              {EXAMPLES.map((ex) => (
-                <button key={ex.label} title={ex.label}
-                  onClick={async () => { const r = await fetch(ex.url); const b = await r.blob(); handleFile(new File([b], `${ex.label}.jpg`, { type: b.type || "image/jpeg" })); }}
-                  className="aspect-square overflow-hidden rounded-lg transition-all"
-                  style={{ border: "1px solid rgba(139,92,246,0.1)" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(139,92,246,0.4)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(139,92,246,0.1)"; }}>
-                  <img src={ex.url} alt={ex.label} className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        {/* RESULTS */}
-        <section>
-          {!mutation.isPending && !mutation.data && !mutation.isError && (
-            <div className="relative grid min-h-[70vh] place-items-center overflow-hidden rounded-xl text-center" style={{ background: "rgba(6,12,20,0.8)", border: "1px solid rgba(139,92,246,0.1)" }}>
-              <div className="pointer-events-none absolute inset-0">
-                <div className="absolute inset-8 rounded-full" style={{ border: "1px solid rgba(139,92,246,0.06)" }} />
-                <div className="absolute inset-16 rounded-full" style={{ border: "1px solid rgba(139,92,246,0.08)" }} />
-                <div className="absolute inset-24 rounded-full" style={{ border: "1px solid rgba(139,92,246,0.1)" }} />
-              </div>
-              <div className="relative px-8">
-                <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-2xl animate-glow-spark" style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.25)" }}>
-                  <Sparkles className="h-9 w-9" style={{ color: "var(--spark)" }} />
+                {/* Subject breakdown header */}
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1" style={{ background: 'var(--border)' }} />
+                  <div className="flex items-center gap-2 font-mono text-[10px] tracking-widest"
+                    style={{ color: 'var(--spark)' }}>
+                    <Layers className="h-3.5 w-3.5" />
+                    SUBJECT_BREAKDOWN · {result.subjects.length} DISCIPLINES
+                  </div>
+                  <div className="h-px flex-1" style={{ background: 'var(--border)' }} />
                 </div>
-                <p className="mb-3 text-xs" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.15em", color: "rgba(139,92,246,0.4)" }}>// AWAITING_INPUT</p>
-                <h3 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>Upload a photo to begin</h3>
-                <p className="mt-3 max-w-sm text-sm" style={{ color: "rgba(208,228,240,0.35)" }}>
-                  SPARK identifies objects and creates lessons across multiple subjects in your language and grade level.
-                </p>
-                {careerContext && <p className="mt-3 text-sm" style={{ color: "rgba(0,212,255,0.6)", fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>CURRICULUM::LOADED / {careerContext}</p>}
-              </div>
-            </div>
-          )}
-          {mutation.isPending && <LoadingState previewUrl={previewUrl} />}
-          {mutation.isError && (
-            <div className="rounded-xl p-8" style={{ background: "rgba(255,60,60,0.05)", border: "1px solid rgba(255,60,60,0.15)" }}>
-              <h3 className="text-lg font-semibold" style={{ color: "#ff8080", fontFamily: "var(--font-display)" }}>Something went wrong</h3>
-              <p className="mt-2 text-sm" style={{ color: "rgba(208,228,240,0.4)", fontFamily: "var(--font-mono)" }}>{(mutation.error as Error).message}</p>
-              <button onClick={() => mutation.mutate()} className="mt-4 inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm transition-all" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(208,228,240,0.5)" }}>
-                <RefreshCw className="h-3.5 w-3.5" /> RETRY
-              </button>
-            </div>
-          )}
-          {mutation.data && (
-            <SparkResultView data={mutation.data} previewUrl={thumbnailDataUrl ?? previewUrl} rtl={langInfo.rtl} grade={grade} language={lang} onReset={reset} />
-          )}
-        </section>
-      </div>
-    </div>
-  );
-}
 
-function LoadingState({ previewUrl }: { previewUrl: string | null }) {
-  const msgs = ["// reading_chemistry", "// tracing_history", "// calculating_math", "// mapping_geography", "// finding_connections", "// generating_lessons"];
-  const [idx, setIdx] = useState(0);
-  useEffect(() => { const t = setInterval(() => setIdx((i) => (i + 1) % msgs.length), 1400); return () => clearInterval(t); }, []);
-  return (
-    <div className="relative grid min-h-[70vh] place-items-center overflow-hidden rounded-xl" style={{ background: "rgba(6,12,20,0.9)", border: "1px solid rgba(139,92,246,0.2)" }}>
-      <div>
-        <div className="relative mx-auto h-56 w-56 overflow-hidden rounded-xl" style={{ border: "1px solid rgba(139,92,246,0.3)" }}>
-          {previewUrl && <img src={previewUrl} alt="" className="h-full w-full object-cover" />}
-          <div className="absolute inset-x-0 h-0.5 animate-scan" style={{ background: "linear-gradient(90deg, transparent, var(--spark), transparent)" }} />
-          <div className="absolute inset-0" style={{ background: "rgba(139,92,246,0.08)" }} />
-          <div className="absolute top-2 left-2 h-5 w-5" style={{ borderTop: "1px solid var(--spark)", borderLeft: "1px solid var(--spark)", opacity: 0.7 }} />
-          <div className="absolute bottom-2 right-2 h-5 w-5" style={{ borderBottom: "1px solid var(--spark)", borderRight: "1px solid var(--spark)", opacity: 0.7 }} />
-        </div>
-        <p className="mt-6 text-center text-sm" style={{ color: "var(--spark)", fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>{msgs[idx]}</p>
-        <div className="mx-auto mt-4 h-0.5 w-48 overflow-hidden rounded-full" style={{ background: "rgba(139,92,246,0.1)" }}>
-          <div className="h-full w-1/3 rounded-full animate-pulse" style={{ background: "linear-gradient(90deg, var(--spark), var(--rawi))" }} />
+                {/* Subject cards */}
+                <div className="space-y-3">
+                  {result.subjects.map((s, i) => (
+                    <SubjectCard key={i} subject={s} isDark={isDark} />
+                  ))}
+                </div>
+
+                {/* Free resources */}
+                <div className="rounded-xl p-5 border" style={{ borderColor: 'var(--border)', background: isDark ? 'rgba(6,12,20,0.4)' : 'rgba(248,250,252,0.7)' }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <BookOpen className="h-4 w-4" style={{ color: 'var(--spark)' }} />
+                    <span className="font-mono text-[10px] tracking-widest font-bold" style={{ color: 'var(--spark)' }}>
+                      // FREE_LEARNING_RESOURCES
+                    </span>
+                  </div>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Khan Academy', desc: 'Video lessons + practice', href: 'https://www.khanacademy.org', icon: <Star className="h-3.5 w-3.5" /> },
+                      { label: 'CK-12', desc: 'Free adaptive textbooks', href: 'https://www.ck12.org', icon: <BookOpen className="h-3.5 w-3.5" /> },
+                      { label: 'PhET Simulations', desc: 'Interactive science sims', href: 'https://phet.colorado.edu', icon: <Globe className="h-3.5 w-3.5" /> },
+                    ].map((r, i) => (
+                      <a key={i} href={r.href} target="_blank" rel="noopener noreferrer"
+                        className="rounded-lg p-3 transition-all duration-200 hover:scale-[1.02] group"
+                        style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.1)' }}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span style={{ color: 'var(--spark)' }}>{r.icon}</span>
+                          <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{r.label}</span>
+                        </div>
+                        <p className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>{r.desc}</p>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </main>
         </div>
       </div>
-    </div>
+    </>
   );
 }
-
-const EXAMPLES = [
-  { label: "Coffee", url: "https://images.unsplash.com/photo-1497515114629-f71d768fd07c?w=400" },
-  { label: "Medicine", url: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400" },
-  { label: "Leaf", url: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=400" },
-  { label: "Receipt", url: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400" },
-  { label: "News", url: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400" },
-  { label: "Circuit", url: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400" },
-  { label: "Fruit", url: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400" },
-  { label: "Coin", url: "https://images.unsplash.com/photo-1518544866330-95a2bec01dab?w=400" },
-];
