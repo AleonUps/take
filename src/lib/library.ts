@@ -1,98 +1,88 @@
-import { useEffect, useState, useCallback } from "react";
-import type { SparkResult } from "@/lib/spark.functions";
-import type { RawiResult } from "@/lib/rawi.functions";
+import { useState, useEffect } from 'react';
 
-export type SparkEntry = {
+export interface SparkEntry {
   id: string;
-  kind: "spark";
-  savedAt: number;
-  thumbnail: string; // data URL
-  grade: "elementary" | "middle" | "high";
+  kind: 'spark';
+  thumbnail: string | null;
+  grade: string;
   language: string;
-  result: SparkResult;
-};
-
-export type RawiEntry = {
-  id: string;
-  kind: "rawi";
+  result: {
+    objectName: string;
+    description: string;
+    subjects: Array<{ subject: string; lessonTitle: string }>;
+  };
   savedAt: number;
+}
+
+export interface RawiEntry {
+  id: string;
+  kind: 'rawi';
   concept: string;
   countryCode: string;
   countryFlag: string;
   countryName: string;
-  grade: "elementary" | "middle" | "high";
+  grade: string;
   language: string;
   languageName: string;
-  result: RawiResult;
-};
+  result: {
+    conceptTitle: string;
+    culturalHook: string;
+    readingTime: string;
+  };
+  savedAt: number;
+}
 
 export type LibraryEntry = SparkEntry | RawiEntry;
 
-const KEY = "educis_library";
-const EVT = "educis-library-update";
+const LIBRARY_KEY = 'educis_library';
 
-function read(): LibraryEntry[] {
-  if (typeof window === "undefined") return [];
+function getAll(): LibraryEntry[] {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
-  } catch {
-    return [];
-  }
+    const raw = localStorage.getItem(LIBRARY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
 }
 
-function write(items: LibraryEntry[]) {
-  if (typeof window === "undefined") return;
+function setAll(entries: LibraryEntry[]): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(items));
-    window.dispatchEvent(new Event(EVT));
-  } catch (e) {
-    console.error("Library save failed", e);
-  }
+    localStorage.setItem(LIBRARY_KEY, JSON.stringify(entries));
+    window.dispatchEvent(new Event('educis-library-update'));
+  } catch {}
 }
 
-export function saveToLibrary(
-  entry:
-    | Omit<SparkEntry, "id" | "savedAt">
-    | Omit<RawiEntry, "id" | "savedAt">,
-): string {
-  const id = `${entry.kind}_${crypto.randomUUID()}`;
+export function saveToLibrary(entry: Omit<LibraryEntry, 'id' | 'savedAt'>): string {
+  const id = crypto.randomUUID();
   const full = { ...entry, id, savedAt: Date.now() } as LibraryEntry;
-  const existing = read();
-  write([full, ...existing]);
+  setAll([full, ...getAll()]);
   return id;
 }
 
-export function deleteFromLibrary(id: string) {
-  write(read().filter((e) => e.id !== id));
+export function deleteFromLibrary(id: string): void {
+  setAll(getAll().filter(e => e.id !== id));
 }
 
 export function getEntry(id: string): LibraryEntry | null {
-  return read().find((e) => e.id === id) ?? null;
+  return getAll().find(e => e.id === id) ?? null;
 }
 
 export function useLibrary(): LibraryEntry[] {
-  const [items, setItems] = useState<LibraryEntry[]>(() => read());
+  const [entries, setEntries] = useState<LibraryEntry[]>(getAll);
   useEffect(() => {
-    const sync = () => setItems(read());
-    window.addEventListener(EVT, sync);
-    window.addEventListener("storage", sync);
+    const sync = () => setEntries(getAll());
+    window.addEventListener('educis-library-update', sync);
+    window.addEventListener('storage', sync);
     return () => {
-      window.removeEventListener(EVT, sync);
-      window.removeEventListener("storage", sync);
+      window.removeEventListener('educis-library-update', sync);
+      window.removeEventListener('storage', sync);
     };
   }, []);
-  return items;
+  return entries;
 }
 
 export function useLibraryCount(): number {
-  const items = useLibrary();
-  return items.length;
+  return useLibrary().length;
 }
 
 export function useLibraryActions() {
-  const remove = useCallback((id: string) => deleteFromLibrary(id), []);
-  return { remove };
+  return { remove: deleteFromLibrary };
 }
