@@ -1,133 +1,38 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Outlet,
-  Link,
-  createRootRouteWithContext,
-  useRouter,
-  HeadContent,
-  Scripts,
-} from "@tanstack/react-router";
-
-import appCss from "../styles.css?url";
-import { SiteNav, SiteFooter } from "@/components/site-chrome";
+import { createRootRouteWithContext, Outlet, Link } from '@tanstack/react-router';
+import type { QueryClient } from '@tanstack/react-query';
+import { SiteNav, SiteFooter } from '@/components/site-chrome';
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+    <div className="flex min-h-screen items-center justify-center px-4" style={{ background: 'var(--background)' }}>
+      <div className="text-center">
+        <p className="font-mono text-xs tracking-widest mb-4" style={{ color: 'var(--oracle)', opacity: 0.5 }}>// ERROR_404</p>
+        <h1 className="text-7xl font-black" style={{ color: 'var(--foreground)', fontFamily: 'Syne, sans-serif' }}>404</h1>
+        <h2 className="mt-4 text-xl font-semibold" style={{ color: 'var(--foreground)' }}>Page not found</h2>
+        <p className="mt-2 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+          This node does not exist in the current pipeline.
         </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
-  const router = useRouter();
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
-        </div>
+        <Link to="/" className="btn-oracle mt-6 inline-flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm">
+          Return to Base
+        </Link>
       </div>
     </div>
   );
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "EDUCIS — Education in your world, your language" },
-      {
-        name: "description",
-        content:
-          "EDUCIS combines SPARK (point at anything, learn everything) and RAWI (your world, your lesson) — AI-powered education in 6 languages across 50 countries.",
-      },
-      { name: "author", content: "EDUCIS" },
-      { property: "og:title", content: "EDUCIS — Education in your world, your language" },
-      {
-        property: "og:description",
-        content: "AI-powered learning in your culture and your language. Free forever.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "EDUCIS — Education in your world, your language" },
-      { name: "description", content: "EDUCIS is an AI-powered educational platform that makes learning personal and accessible." },
-      { property: "og:description", content: "EDUCIS is an AI-powered educational platform that makes learning personal and accessible." },
-      { name: "twitter:description", content: "EDUCIS is an AI-powered educational platform that makes learning personal and accessible." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fec97dbc-cc09-4aad-9e37-5a1b27a2c3bc/id-preview-748970bc--87340501-980f-4633-91c9-5782aeea9e2b.lovable.app-1779630208137.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fec97dbc-cc09-4aad-9e37-5a1b27a2c3bc/id-preview-748970bc--87340501-980f-4633-91c9-5782aeea9e2b.lovable.app-1779630208137.png" },
-    ],
-    links: [{ rel: "stylesheet", href: appCss }],
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
 });
 
-function RootShell({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="flex min-h-screen flex-col">
-        <SiteNav />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <SiteFooter />
-      </div>
-    </QueryClientProvider>
+    <div className="flex min-h-screen flex-col">
+      <SiteNav />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
