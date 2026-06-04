@@ -299,7 +299,7 @@ function RawiPage() {
                       }>
                       <div className="text-sm font-semibold" style={{ color: grade === g.id ? 'var(--rawi)' : 'var(--foreground)' }}>{g.label}</div>
                       <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{g.ages}</div>
-                      <div className="mt-1 text-[11px] italic" style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}>"{g.desc}"</div>
+                      <div className="mt-1 text-[11px] italic" style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}>\"{ g.desc}\"</div>
                     </button>
                   ))}
                 </div>
@@ -425,7 +425,7 @@ function RawiResultDisplay({ data, country, rtl, isDark, onToggle, completedTopi
 
       {/* Pull quote */}
       <blockquote className="my-6 pl-4 py-2" style={{ borderLeft: '3px solid var(--rawi)' }}>
-        <p className="text-lg italic" style={{ color: 'var(--rawi)', fontFamily: 'Syne, sans-serif' }}>"{data.pullQuote}"</p>
+        <p className="text-lg italic" style={{ color: 'var(--rawi)', fontFamily: 'Syne, sans-serif' }}>\"{ data.pullQuote}\"</p>
       </blockquote>
 
       {/* Examples */}
@@ -532,7 +532,7 @@ function generateDemoLesson(concept: string, country: string): RawiLesson {
       `Every transaction, every negotiation, every decision at that market reflects the core principles of ${concept} that we'll explore together.`,
       `By the end of this lesson, you'll see ${concept} not as a textbook topic, but as something alive in your community every single day.`,
     ],
-    pullQuote: `"${concept} isn't something that happens elsewhere — it's the rhythm of your own street."`,
+    pullQuote: `\"${concept} isn't something that happens elsewhere — it's the rhythm of your own street.\"`,
     examples: [
       { title: 'Local Market Example', explanation: `How ${concept} appears in everyday ${country} commerce and culture.`, localContext: `This is something you might see at any local gathering in ${country}.` },
       { title: 'Community Application', explanation: `Real-world application of ${concept} in ${country}'s social fabric.`, localContext: `Families in ${country} use this principle constantly without realizing it.` },
