@@ -1,1 +1,1 @@
-import{c,u as d,j as e,E as l,L as t,a as n,C as i}from"./index-BqGgUuUg.js";import{G as m}from"./globe-D0XR0OVk.js";import{Z as x}from"./zap-DSOusdxY.js";export{};
+function k(){return null}export{k as component};
