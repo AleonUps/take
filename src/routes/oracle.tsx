@@ -583,7 +583,7 @@ function OraclePage() {
 
             <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--muted-foreground)' }}>
               You are switching to <strong style={{ color: 'var(--oracle)' }}>Fast-Track MCQ mode</strong>.
-              This reduces profiling accuracy by bypassing 0RACLE&apos;s deep conversational tracking for the sake of rapid usage.
+              This reduces profiling accuracy by bypassing 0RACLE's deep conversational tracking for the sake of rapid usage.
               <br /><br />
               <span style={{ color: 'rgba(255,100,0,0.7)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem' }}>
                 // accuracy_reduction: ~40% · speed_gain: 10x · depth_lost: HIGH
