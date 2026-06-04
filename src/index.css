@@ -101,7 +101,6 @@
 /* ---------- COMPONENT LAYER ---------- */
 @layer components {
 
-  /* GLASS BOARDS */
   .glass {
     background: var(--card-bg);
     backdrop-filter: blur(20px);
@@ -115,7 +114,6 @@
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
   }
 
-  /* TECH GRID OVERLAY */
   .tech-grid {
     background-image:
       linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
@@ -143,7 +141,6 @@
       linear-gradient(90deg, rgba(139, 92, 246, 0.025) 1px, transparent 1px);
   }
 
-  /* HUD CARD */
   .hud-card {
     position: relative;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -206,7 +203,6 @@
   .hud-card-spark::before,
   .hud-card-spark::after { border-color: var(--spark) !important; }
 
-  /* SCAN LINE on hover */
   .scan-on-hover {
     position: relative;
     overflow: hidden;
@@ -230,7 +226,6 @@
     animation: scan-sweep 0.5s cubic-bezier(0.4, 0, 0.6, 1) forwards;
   }
 
-  /* BUTTONS */
   .btn-oracle {
     background: linear-gradient(135deg, #00d4ff, #40e8ff);
     color: #000810;
@@ -310,7 +305,6 @@
     transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* TEXT GRADIENTS */
   .text-gradient-oracle {
     background: var(--gradient-oracle);
     -webkit-background-clip: text;
@@ -339,7 +333,6 @@
     color: transparent;
   }
 
-  /* MESH BACKGROUNDS */
   .mesh-oracle {
     background-image:
       radial-gradient(at 15% 5%, rgba(0, 212, 255, 0.15) 0%, transparent 55%),
@@ -366,7 +359,6 @@
     background-image: none;
   }
 
-  /* SCAN ANIMATION (continuous) */
   .animate-scan {
     position: relative;
     overflow: hidden;
@@ -382,7 +374,6 @@
     opacity: 0.4;
   }
 
-  /* THEME TOGGLE */
   .theme-toggle {
     position: relative;
     width: 52px;
@@ -421,7 +412,6 @@
     background: var(--oracle);
   }
 
-  /* MCQ CHOICE CARD */
   .mcq-card {
     position: relative;
     border-radius: 12px;
@@ -471,7 +461,6 @@
     box-shadow: 0 4px 16px rgba(2, 132, 199, 0.15);
   }
 
-  /* GLASSMORPHIC MODAL */
   .modal-glass {
     background: rgba(4, 8, 14, 0.92);
     backdrop-filter: blur(40px);
@@ -487,7 +476,6 @@
     box-shadow: 0 25px 80px -15px rgba(15, 23, 42, 0.3);
   }
 
-  /* TERMINAL */
   .terminal-loader {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
@@ -495,7 +483,10 @@
     line-height: 1.8;
   }
 
-  /* CATEGORY CHIP */
+  [data-theme="light"] .terminal-loader {
+    color: var(--oracle);
+  }
+
   .category-chip {
     display: flex;
     align-items: center;
