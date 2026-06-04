@@ -4,7 +4,7 @@ import { Globe, BookOpen, Camera, Eye, ArrowRight, Zap, Star } from 'lucide-reac
 import { useTheme } from '@/lib/theme';
 import { SUBJECTS } from '@/lib/educis';
 
-export const Route = createFileRoute('/explore')({
+export const Route = createFileRoute('/explore')( {
   component: ExplorePage,
 });
 
