@@ -115,7 +115,7 @@
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
   }
 
-  /* TECH GRID OVERLAY — every page */
+  /* TECH GRID OVERLAY */
   .tech-grid {
     background-image:
       linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
@@ -143,7 +143,7 @@
       linear-gradient(90deg, rgba(139, 92, 246, 0.025) 1px, transparent 1px);
   }
 
-  /* HUD CARD — corner brackets */
+  /* HUD CARD */
   .hud-card {
     position: relative;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -185,7 +185,6 @@
                 right 0.25s cubic-bezier(0.16,1,0.3,1);
   }
 
-  /* HUD bracket EXPAND on hover — 4px outward slide */
   .hud-card:hover::before {
     opacity: 1;
     width: 20px; height: 20px;
@@ -207,7 +206,7 @@
   .hud-card-spark::before,
   .hud-card-spark::after { border-color: var(--spark) !important; }
 
-  /* SCAN LINE on card hover entry */
+  /* SCAN LINE on hover */
   .scan-on-hover {
     position: relative;
     overflow: hidden;
@@ -231,7 +230,7 @@
     animation: scan-sweep 0.5s cubic-bezier(0.4, 0, 0.6, 1) forwards;
   }
 
-  /* PRODUCTION BUTTONS */
+  /* BUTTONS */
   .btn-oracle {
     background: linear-gradient(135deg, #00d4ff, #40e8ff);
     color: #000810;
@@ -383,7 +382,7 @@
     opacity: 0.4;
   }
 
-  /* THEME TOGGLE BUTTON */
+  /* THEME TOGGLE */
   .theme-toggle {
     position: relative;
     width: 52px;
@@ -488,16 +487,12 @@
     box-shadow: 0 25px 80px -15px rgba(15, 23, 42, 0.3);
   }
 
-  /* TERMINAL LOADING */
+  /* TERMINAL */
   .terminal-loader {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     color: var(--oracle);
     line-height: 1.8;
-  }
-
-  [data-theme="light"] .terminal-loader {
-    color: var(--oracle);
   }
 
   /* CATEGORY CHIP */
@@ -605,11 +600,9 @@
   animation: shimmer 2.5s linear infinite;
 }
 
-/* Scrollbar hide */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Global font inheritance */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Syne', system-ui, sans-serif;
 }
@@ -618,14 +611,12 @@ code, pre, .font-mono {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Smooth theme transitions */
 *, *::before, *::after {
   transition-property: background-color, border-color, color, box-shadow;
   transition-duration: 0.2s;
   transition-timing-function: ease;
 }
 
-/* But NOT transitions on animations */
 .animate-pulse, .animate-ping, .animate-bounce, .animate-spin,
 .animate-glow-oracle, .animate-glow-spark, .animate-fade-up, .animate-slide-right {
   transition: none !important;
