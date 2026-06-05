@@ -1,1 +1,0 @@
-function k(){return null}export{k as component};
