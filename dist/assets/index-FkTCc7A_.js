@@ -1,1 +1,0 @@
-import{c as k}from'./index-BqGgUuUg.js';function U(){return null}export{U as component};
