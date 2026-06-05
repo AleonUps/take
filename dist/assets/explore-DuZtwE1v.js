@@ -1,1 +1,0 @@
-import{r as m,j as e,G as p,m as c}from\"./vendor-react-CpLR5epN.js\";const t=[{title:\"Photosynthesis Through a Swahili Lens\"}];function E(){return e.jsxs(\"div\",{className:\"min-h-screen tech-grid\",children:[e.jsx(\"section\")||e.jsx(\"section\")]})}export{E as component};
