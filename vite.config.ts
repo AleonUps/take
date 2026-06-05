@@ -12,4 +12,19 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-dom')) return 'vendor-react-dom';
+            if (id.includes('react/')) return 'vendor-react';
+            if (id.includes('@tanstack')) return 'vendor-tanstack';
+            if (id.includes('lucide-react')) return 'vendor-lucide';
+            return 'vendor-misc';
+          }
+        },
+      },
+    },
+  },
 });
